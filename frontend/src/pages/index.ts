@@ -5,8 +5,17 @@ import NotFoundPage from './NotFoundPage';
 import UnauthorizedPage from './UnauthorizedPage';
 import ServicesPage from './ServicesPage';
 import ServiceDetailsPage from './ServiceDetailsPage';
-import { ClientDashboardPage } from './client';
-import { ProviderDashboardPage } from './provider';
+import {
+  ClientDashboardPage,
+  ClientAppointmentsPage,
+  ClientProfilePage,
+} from './client';
+import {
+  ProviderDashboardPage,
+  ProviderAppointmentsPage,
+  ProviderProfilePage,
+  ProviderAvailabilityPage,
+} from './provider';
 import { AdminDashboardPage } from './admin';
 
 export {
@@ -18,6 +27,11 @@ export {
   ServicesPage,
   ServiceDetailsPage,
   ClientDashboardPage,
+  ClientAppointmentsPage,
+  ClientProfilePage,
   ProviderDashboardPage,
+  ProviderAppointmentsPage,
+  ProviderProfilePage,
+  ProviderAvailabilityPage,
   AdminDashboardPage,
 };

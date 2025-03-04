@@ -15,7 +15,12 @@ import {
   ServicesPage,
   ServiceDetailsPage,
   ClientDashboardPage,
+  ClientAppointmentsPage,
+  ClientProfilePage,
   ProviderDashboardPage,
+  ProviderAppointmentsPage,
+  ProviderProfilePage,
+  ProviderAvailabilityPage,
   AdminDashboardPage,
 } from './pages';
 
@@ -80,17 +85,17 @@ function App() {
               {/* Protected client routes */}
               <Route element={<ProtectedRoute allowedRoles={['CLIENT', 'ADMIN']} />}>
                 <Route path="client/dashboard" element={<ClientDashboardPage />} />
-                <Route path="client/appointments" element={<div>Client Appointments (Coming Soon)</div>} />
-                <Route path="client/profile" element={<div>Client Profile (Coming Soon)</div>} />
+                <Route path="client/appointments" element={<ClientAppointmentsPage />} />
+                <Route path="client/profile" element={<ClientProfilePage />} />
               </Route>
 
               {/* Protected provider routes */}
               <Route element={<ProtectedRoute allowedRoles={['PROVIDER', 'ADMIN']} />}>
                 <Route path="provider/dashboard" element={<ProviderDashboardPage />} />
-                <Route path="provider/appointments" element={<div>Provider Appointments (Coming Soon)</div>} />
+                <Route path="provider/appointments" element={<ProviderAppointmentsPage />} />
                 <Route path="provider/services" element={<div>Provider Services (Coming Soon)</div>} />
-                <Route path="provider/availability" element={<div>Provider Availability (Coming Soon)</div>} />
-                <Route path="provider/profile" element={<div>Provider Profile (Coming Soon)</div>} />
+                <Route path="provider/availability" element={<ProviderAvailabilityPage />} />
+                <Route path="provider/profile" element={<ProviderProfilePage />} />
               </Route>
 
               {/* Protected admin routes */}
