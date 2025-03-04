@@ -1,64 +1,76 @@
-import { ApiResponse, Availability } from '../types';
-import axiosInstance from './axiosConfig';
+import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
+// Types
+export interface Availability {
+  id: number;
+  providerId: number;
+  providerName?: string;
+  recurring: boolean;
+  dayOfWeek?: number;
+  specificDate?: string;
+  startTime: string;
+  endTime: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Create axios instance with base URL
+const api = axios.create({
+  baseURL: API_BASE_URL,
+});
+
+// Add request interceptor to include auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Availability service methods
 export const availabilityService = {
-  getAllAvailabilities: async (): Promise<Availability[]> => {
-    const response = await axiosInstance.get<ApiResponse<Availability[]>>('/availabilities');
-    return response.data.data;
+  // Get all availabilities (admin only)
+  getAllAvailabilities: () => {
+    return api.get<{ success: boolean; data: Availability[] }>('/availabilities');
   },
-
-  getAvailabilityById: async (id: number): Promise<Availability> => {
-    const response = await axiosInstance.get<ApiResponse<Availability>>(`/availabilities/${id}`);
-    return response.data.data;
+  
+  // Get availability by ID
+  getAvailabilityById: (availabilityId: number) => {
+    return api.get<{ success: boolean; data: Availability }>(`/availabilities/${availabilityId}`);
   },
-
-  getAvailabilitiesByProviderId: async (providerId: number, recurring?: boolean): Promise<Availability[]> => {
-    const response = await axiosInstance.get<ApiResponse<Availability[]>>(`/availabilities/provider/${providerId}`, {
-      params: { recurring },
-    });
-    return response.data.data;
+  
+  // Get availabilities by provider ID
+  getAvailabilitiesByProviderId: (providerId: number) => {
+    return api.get<{ success: boolean; data: Availability[] }>(`/availabilities/provider/${providerId}`);
   },
-
-  getAvailabilitiesByProviderIdAndDayOfWeek: async (providerId: number, dayOfWeek: number): Promise<Availability[]> => {
-    const response = await axiosInstance.get<ApiResponse<Availability[]>>(
-      `/availabilities/provider/${providerId}/day/${dayOfWeek}`
-    );
-    return response.data.data;
+  
+  // Get recurring availabilities by provider ID
+  getRecurringAvailabilitiesByProviderId: (providerId: number) => {
+    return api.get<{ success: boolean; data: Availability[] }>(`/availabilities/provider/${providerId}/recurring`);
   },
-
-  getAvailabilitiesByProviderIdAndDate: async (providerId: number, date: string): Promise<Availability[]> => {
-    const response = await axiosInstance.get<ApiResponse<Availability[]>>(
-      `/availabilities/provider/${providerId}/date/${date}`
-    );
-    return response.data.data;
+  
+  // Get specific date availabilities by provider ID
+  getSpecificDateAvailabilitiesByProviderId: (providerId: number, date: string) => {
+    return api.get<{ success: boolean; data: Availability[] }>(`/availabilities/provider/${providerId}/date/${date}`);
   },
-
-  createAvailability: async (providerId: number, availabilityData: Partial<Availability>): Promise<Availability> => {
-    const response = await axiosInstance.post<ApiResponse<Availability>>(
-      `/availabilities/provider/${providerId}`,
-      availabilityData
-    );
-    return response.data.data;
+  
+  // Create availability (provider only)
+  createAvailability: (providerId: number, availabilityData: Omit<Availability, 'id' | 'providerId' | 'createdAt' | 'updatedAt'>) => {
+    return api.post<{ success: boolean; data: Availability }>(`/availabilities/provider/${providerId}`, availabilityData);
   },
-
-  updateAvailability: async (id: number, availabilityData: Partial<Availability>): Promise<Availability> => {
-    const response = await axiosInstance.put<ApiResponse<Availability>>(`/availabilities/${id}`, availabilityData);
-    return response.data.data;
+  
+  // Update availability
+  updateAvailability: (availabilityId: number, availabilityData: Partial<Availability>) => {
+    return api.put<{ success: boolean; data: Availability }>(`/availabilities/${availabilityId}`, availabilityData);
   },
-
-  deleteAvailability: async (id: number): Promise<void> => {
-    await axiosInstance.delete<ApiResponse<void>>(`/availabilities/${id}`);
-  },
-
-  checkAvailability: async (
-    providerId: number,
-    date: string,
-    startTime: string,
-    endTime: string
-  ): Promise<boolean> => {
-    const response = await axiosInstance.get<ApiResponse<boolean>>(`/availabilities/provider/${providerId}/check`, {
-      params: { date, startTime, endTime },
-    });
-    return response.data.data;
+  
+  // Delete availability
+  deleteAvailability: (availabilityId: number) => {
+    return api.delete<{ success: boolean; message: string }>(`/availabilities/${availabilityId}`);
   },
 };

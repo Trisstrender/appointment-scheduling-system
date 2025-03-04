@@ -1,9 +1,7 @@
-import AlertMessage from './AlertMessage';
 import LoadingSpinner from './LoadingSpinner';
-import ProtectedRoute from './ProtectedRoute';
+import AlertMessage from './AlertMessage';
 
 export {
-  AlertMessage,
   LoadingSpinner,
-  ProtectedRoute,
+  AlertMessage,
 };

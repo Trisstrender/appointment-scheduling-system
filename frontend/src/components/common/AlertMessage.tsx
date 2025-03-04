@@ -19,8 +19,19 @@ const AlertMessage: React.FC<AlertMessageProps> = ({
   autoHideDuration = 6000,
 }) => {
   return (
-    <Snackbar open={open} autoHideDuration={autoHideDuration} onClose={onClose}>
-      <Alert onClose={onClose} severity={severity} sx={{ width: '100%' }}>
+    <Snackbar
+      open={open}
+      autoHideDuration={autoHideDuration}
+      onClose={onClose}
+      anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      data-testid="alert-snackbar"
+    >
+      <Alert
+        onClose={onClose}
+        severity={severity}
+        sx={{ width: '100%' }}
+        data-testid={`alert-${severity}`}
+      >
         {title && <AlertTitle>{title}</AlertTitle>}
         {message}
       </Alert>

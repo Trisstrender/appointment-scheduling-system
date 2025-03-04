@@ -1,45 +1,76 @@
-import { ApiResponse, Service } from '../types';
-import axiosInstance from './axiosConfig';
+import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
+// Types
+export interface Service {
+  id: number;
+  name: string;
+  description?: string;
+  durationMinutes: number;
+  price: number;
+  providerId: number;
+  providerName?: string;
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Create axios instance with base URL
+const api = axios.create({
+  baseURL: API_BASE_URL,
+});
+
+// Add request interceptor to include auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Service service methods
 export const serviceService = {
-  getAllServices: async (activeOnly?: boolean): Promise<Service[]> => {
-    const response = await axiosInstance.get<ApiResponse<Service[]>>('/services', {
-      params: { activeOnly },
-    });
-    return response.data.data;
+  // Get all services
+  getAllServices: (activeOnly: boolean = false) => {
+    return api.get<{ success: boolean; data: Service[] }>(`/services?activeOnly=${activeOnly}`);
   },
-
-  getServiceById: async (id: number): Promise<Service> => {
-    const response = await axiosInstance.get<ApiResponse<Service>>(`/services/${id}`);
-    return response.data.data;
+  
+  // Get service by ID
+  getServiceById: (serviceId: number) => {
+    return api.get<{ success: boolean; data: Service }>(`/services/${serviceId}`);
   },
-
-  getServicesByProviderId: async (providerId: number, activeOnly?: boolean): Promise<Service[]> => {
-    const response = await axiosInstance.get<ApiResponse<Service[]>>(`/services/provider/${providerId}`, {
-      params: { activeOnly },
-    });
-    return response.data.data;
+  
+  // Get services by provider ID
+  getServicesByProviderId: (providerId: number, activeOnly: boolean = false) => {
+    return api.get<{ success: boolean; data: Service[] }>(`/services/provider/${providerId}?activeOnly=${activeOnly}`);
   },
-
-  createService: async (providerId: number, serviceData: Partial<Service>): Promise<Service> => {
-    const response = await axiosInstance.post<ApiResponse<Service>>(`/services/provider/${providerId}`, serviceData);
-    return response.data.data;
+  
+  // Create service (provider only)
+  createService: (providerId: number, serviceData: Omit<Service, 'id' | 'providerId' | 'createdAt' | 'updatedAt'>) => {
+    return api.post<{ success: boolean; data: Service }>(`/services/provider/${providerId}`, serviceData);
   },
-
-  updateService: async (id: number, serviceData: Partial<Service>): Promise<Service> => {
-    const response = await axiosInstance.put<ApiResponse<Service>>(`/services/${id}`, serviceData);
-    return response.data.data;
+  
+  // Update service
+  updateService: (serviceId: number, serviceData: Partial<Service>) => {
+    return api.put<{ success: boolean; data: Service }>(`/services/${serviceId}`, serviceData);
   },
-
-  deleteService: async (id: number): Promise<void> => {
-    await axiosInstance.delete<ApiResponse<void>>(`/services/${id}`);
+  
+  // Delete service
+  deleteService: (serviceId: number) => {
+    return api.delete<{ success: boolean; message: string }>(`/services/${serviceId}`);
   },
-
-  activateService: async (id: number): Promise<void> => {
-    await axiosInstance.put<ApiResponse<void>>(`/services/${id}/activate`);
+  
+  // Activate service
+  activateService: (serviceId: number) => {
+    return api.put<{ success: boolean; data: Service }>(`/services/${serviceId}/activate`);
   },
-
-  deactivateService: async (id: number): Promise<void> => {
-    await axiosInstance.put<ApiResponse<void>>(`/services/${id}/deactivate`);
+  
+  // Deactivate service
+  deactivateService: (serviceId: number) => {
+    return api.put<{ success: boolean; data: Service }>(`/services/${serviceId}/deactivate`);
   },
 };

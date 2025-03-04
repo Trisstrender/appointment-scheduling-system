@@ -1,107 +1,84 @@
-import { ApiResponse, Appointment } from '../types';
-import axiosInstance from './axiosConfig';
+import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
+// Types
+export interface Appointment {
+  id: number;
+  clientId: number;
+  clientName?: string;
+  providerId: number;
+  providerName?: string;
+  serviceId: number;
+  serviceName?: string;
+  startTime: string;
+  endTime: string;
+  status: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Create axios instance with base URL
+const api = axios.create({
+  baseURL: API_BASE_URL,
+});
+
+// Add request interceptor to include auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Appointment service methods
 export const appointmentService = {
-  getAllAppointments: async (): Promise<Appointment[]> => {
-    const response = await axiosInstance.get<ApiResponse<Appointment[]>>('/appointments');
-    return response.data.data;
+  // Get all appointments (admin only)
+  getAllAppointments: () => {
+    return api.get<{ success: boolean; data: Appointment[] }>('/appointments');
   },
-
-  getAppointmentById: async (id: number): Promise<Appointment> => {
-    const response = await axiosInstance.get<ApiResponse<Appointment>>(`/appointments/${id}`);
-    return response.data.data;
+  
+  // Get appointment by ID
+  getAppointmentById: (appointmentId: number) => {
+    return api.get<{ success: boolean; data: Appointment }>(`/appointments/${appointmentId}`);
   },
-
-  getAppointmentsByClientId: async (clientId: number, upcoming?: boolean): Promise<Appointment[]> => {
-    const response = await axiosInstance.get<ApiResponse<Appointment[]>>(`/appointments/client/${clientId}`, {
-      params: { upcoming },
-    });
-    return response.data.data;
+  
+  // Get appointments by client ID
+  getAppointmentsByClientId: (clientId: number) => {
+    return api.get<{ success: boolean; data: Appointment[] }>(`/appointments/client/${clientId}`);
   },
-
-  getAppointmentsByProviderId: async (providerId: number, upcoming?: boolean): Promise<Appointment[]> => {
-    const response = await axiosInstance.get<ApiResponse<Appointment[]>>(`/appointments/provider/${providerId}`, {
-      params: { upcoming },
-    });
-    return response.data.data;
+  
+  // Get appointments by provider ID
+  getAppointmentsByProviderId: (providerId: number) => {
+    return api.get<{ success: boolean; data: Appointment[] }>(`/appointments/provider/${providerId}`);
   },
-
-  getAppointmentsByServiceId: async (serviceId: number): Promise<Appointment[]> => {
-    const response = await axiosInstance.get<ApiResponse<Appointment[]>>(`/appointments/service/${serviceId}`);
-    return response.data.data;
+  
+  // Create appointment
+  createAppointment: (appointmentData: Omit<Appointment, 'id' | 'status' | 'createdAt' | 'updatedAt'>) => {
+    return api.post<{ success: boolean; data: Appointment }>('/appointments', appointmentData);
   },
-
-  getAppointmentsByStatus: async (status: string): Promise<Appointment[]> => {
-    const response = await axiosInstance.get<ApiResponse<Appointment[]>>(`/appointments/status/${status}`);
-    return response.data.data;
+  
+  // Update appointment
+  updateAppointment: (appointmentId: number, appointmentData: Partial<Appointment>) => {
+    return api.put<{ success: boolean; data: Appointment }>(`/appointments/${appointmentId}`, appointmentData);
   },
-
-  getAppointmentsByProviderIdAndDate: async (providerId: number, date: string): Promise<Appointment[]> => {
-    const response = await axiosInstance.get<ApiResponse<Appointment[]>>(
-      `/appointments/provider/${providerId}/date/${date}`
-    );
-    return response.data.data;
+  
+  // Update appointment status
+  updateAppointmentStatus: (appointmentId: number, status: string) => {
+    return api.put<{ success: boolean; data: Appointment }>(`/appointments/${appointmentId}/status/${status}`);
   },
-
-  getAppointmentsByClientIdAndDate: async (clientId: number, date: string): Promise<Appointment[]> => {
-    const response = await axiosInstance.get<ApiResponse<Appointment[]>>(
-      `/appointments/client/${clientId}/date/${date}`
-    );
-    return response.data.data;
+  
+  // Cancel appointment
+  cancelAppointment: (appointmentId: number) => {
+    return api.put<{ success: boolean; data: Appointment }>(`/appointments/${appointmentId}/cancel`);
   },
-
-  getAppointmentsByProviderIdAndDateRange: async (
-    providerId: number,
-    startDateTime: string,
-    endDateTime: string
-  ): Promise<Appointment[]> => {
-    const response = await axiosInstance.get<ApiResponse<Appointment[]>>(
-      `/appointments/provider/${providerId}/range`,
-      {
-        params: { startDateTime, endDateTime },
-      }
-    );
-    return response.data.data;
-  },
-
-  getAppointmentsByClientIdAndDateRange: async (
-    clientId: number,
-    startDateTime: string,
-    endDateTime: string
-  ): Promise<Appointment[]> => {
-    const response = await axiosInstance.get<ApiResponse<Appointment[]>>(`/appointments/client/${clientId}/range`, {
-      params: { startDateTime, endDateTime },
-    });
-    return response.data.data;
-  },
-
-  createAppointment: async (appointmentData: Partial<Appointment>): Promise<Appointment> => {
-    const response = await axiosInstance.post<ApiResponse<Appointment>>('/appointments', appointmentData);
-    return response.data.data;
-  },
-
-  updateAppointment: async (id: number, appointmentData: Partial<Appointment>): Promise<Appointment> => {
-    const response = await axiosInstance.put<ApiResponse<Appointment>>(`/appointments/${id}`, appointmentData);
-    return response.data.data;
-  },
-
-  updateAppointmentStatus: async (id: number, status: string): Promise<Appointment> => {
-    const response = await axiosInstance.put<ApiResponse<Appointment>>(`/appointments/${id}/status/${status}`);
-    return response.data.data;
-  },
-
-  deleteAppointment: async (id: number): Promise<void> => {
-    await axiosInstance.delete<ApiResponse<void>>(`/appointments/${id}`);
-  },
-
-  checkAvailability: async (
-    providerId: number,
-    startDateTime: string,
-    endDateTime: string
-  ): Promise<boolean> => {
-    const response = await axiosInstance.get<ApiResponse<boolean>>('/appointments/check', {
-      params: { providerId, startDateTime, endDateTime },
-    });
-    return response.data.data;
+  
+  // Delete appointment (admin only)
+  deleteAppointment: (appointmentId: number) => {
+    return api.delete<{ success: boolean; message: string }>(`/appointments/${appointmentId}`);
   },
 };

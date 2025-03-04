@@ -3,9 +3,13 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 
 interface LoadingSpinnerProps {
   message?: string;
+  size?: number;
 }
 
-const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ message = 'Loading...' }) => {
+const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
+  message = 'Loading...', 
+  size = 40 
+}) => {
   return (
     <Box
       sx={{
@@ -14,14 +18,21 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ message = 'Loading...' 
         alignItems: 'center',
         justifyContent: 'center',
         height: '100%',
-        minHeight: '200px',
-        p: 3,
+        width: '100%',
+        padding: 4,
       }}
+      data-testid="loading-spinner"
     >
-      <CircularProgress size={60} thickness={4} />
-      <Typography variant="h6" sx={{ mt: 2 }}>
-        {message}
-      </Typography>
+      <CircularProgress size={size} />
+      {message && (
+        <Typography
+          variant="body1"
+          sx={{ mt: 2, textAlign: 'center' }}
+          data-testid="loading-message"
+        >
+          {message}
+        </Typography>
+      )}
     </Box>
   );
 };
