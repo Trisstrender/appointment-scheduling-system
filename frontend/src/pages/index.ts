@@ -17,7 +17,7 @@ import {
   ProviderAvailabilityPage,
   ProviderServicesPage,
 } from './provider';
-import { AdminDashboardPage, AdminUsersPage } from './admin';
+import { AdminDashboardPage, AdminUsersPage, AdminServicesPage } from './admin';
 
 export {
   HomePage,
@@ -37,4 +37,5 @@ export {
   ProviderServicesPage,
   AdminDashboardPage,
   AdminUsersPage,
+  AdminServicesPage,
 };
