@@ -12,6 +12,11 @@ import {
   RegisterPage,
   NotFoundPage,
   UnauthorizedPage,
+  ServicesPage,
+  ServiceDetailsPage,
+  ClientDashboardPage,
+  ProviderDashboardPage,
+  AdminDashboardPage,
 } from './pages';
 
 // Create a theme instance
@@ -69,17 +74,19 @@ function App() {
               <Route path="login" element={<LoginPage />} />
               <Route path="register" element={<RegisterPage />} />
               <Route path="unauthorized" element={<UnauthorizedPage />} />
+              <Route path="services" element={<ServicesPage />} />
+              <Route path="services/:id" element={<ServiceDetailsPage />} />
 
               {/* Protected client routes */}
               <Route element={<ProtectedRoute allowedRoles={['CLIENT', 'ADMIN']} />}>
-                <Route path="client/dashboard" element={<div>Client Dashboard (Coming Soon)</div>} />
+                <Route path="client/dashboard" element={<ClientDashboardPage />} />
                 <Route path="client/appointments" element={<div>Client Appointments (Coming Soon)</div>} />
                 <Route path="client/profile" element={<div>Client Profile (Coming Soon)</div>} />
               </Route>
 
               {/* Protected provider routes */}
               <Route element={<ProtectedRoute allowedRoles={['PROVIDER', 'ADMIN']} />}>
-                <Route path="provider/dashboard" element={<div>Provider Dashboard (Coming Soon)</div>} />
+                <Route path="provider/dashboard" element={<ProviderDashboardPage />} />
                 <Route path="provider/appointments" element={<div>Provider Appointments (Coming Soon)</div>} />
                 <Route path="provider/services" element={<div>Provider Services (Coming Soon)</div>} />
                 <Route path="provider/availability" element={<div>Provider Availability (Coming Soon)</div>} />
@@ -88,7 +95,7 @@ function App() {
 
               {/* Protected admin routes */}
               <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
-                <Route path="admin/dashboard" element={<div>Admin Dashboard (Coming Soon)</div>} />
+                <Route path="admin/dashboard" element={<AdminDashboardPage />} />
                 <Route path="admin/users" element={<div>Admin Users (Coming Soon)</div>} />
                 <Route path="admin/services" element={<div>Admin Services (Coming Soon)</div>} />
                 <Route path="admin/appointments" element={<div>Admin Appointments (Coming Soon)</div>} />
