@@ -7,6 +7,7 @@ export interface User {
   phoneNumber: string;
   role: string;
   userType: 'CLIENT' | 'PROVIDER' | 'ADMIN';
+  active: boolean;
   createdAt: string;
   updatedAt: string;
 }

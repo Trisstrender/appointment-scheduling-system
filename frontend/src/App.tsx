@@ -23,6 +23,7 @@ import {
   ProviderAvailabilityPage,
   ProviderServicesPage,
   AdminDashboardPage,
+  AdminUsersPage,
 } from './pages';
 
 // Create a theme instance
@@ -102,7 +103,7 @@ function App() {
               {/* Protected admin routes */}
               <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
                 <Route path="admin/dashboard" element={<AdminDashboardPage />} />
-                <Route path="admin/users" element={<div>Admin Users (Coming Soon)</div>} />
+                <Route path="admin/users" element={<AdminUsersPage />} />
                 <Route path="admin/services" element={<div>Admin Services (Coming Soon)</div>} />
                 <Route path="admin/appointments" element={<div>Admin Appointments (Coming Soon)</div>} />
               </Route>

@@ -35,4 +35,12 @@ export const userService = {
   deleteUser: async (id: number): Promise<void> => {
     await axiosInstance.delete<ApiResponse<void>>(`/users/${id}`);
   },
+
+  activateUser: async (id: number): Promise<void> => {
+    await axiosInstance.put<ApiResponse<void>>(`/users/${id}/activate`);
+  },
+
+  deactivateUser: async (id: number): Promise<void> => {
+    await axiosInstance.put<ApiResponse<void>>(`/users/${id}/deactivate`);
+  },
 };
