@@ -15,6 +15,7 @@ import {
   ProviderAppointmentsPage,
   ProviderProfilePage,
   ProviderAvailabilityPage,
+  ProviderServicesPage,
 } from './provider';
 import { AdminDashboardPage } from './admin';
 
@@ -33,5 +34,6 @@ export {
   ProviderAppointmentsPage,
   ProviderProfilePage,
   ProviderAvailabilityPage,
+  ProviderServicesPage,
   AdminDashboardPage,
 };

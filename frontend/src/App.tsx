@@ -21,6 +21,7 @@ import {
   ProviderAppointmentsPage,
   ProviderProfilePage,
   ProviderAvailabilityPage,
+  ProviderServicesPage,
   AdminDashboardPage,
 } from './pages';
 
@@ -93,7 +94,7 @@ function App() {
               <Route element={<ProtectedRoute allowedRoles={['PROVIDER', 'ADMIN']} />}>
                 <Route path="provider/dashboard" element={<ProviderDashboardPage />} />
                 <Route path="provider/appointments" element={<ProviderAppointmentsPage />} />
-                <Route path="provider/services" element={<div>Provider Services (Coming Soon)</div>} />
+                <Route path="provider/services" element={<ProviderServicesPage />} />
                 <Route path="provider/availability" element={<ProviderAvailabilityPage />} />
                 <Route path="provider/profile" element={<ProviderProfilePage />} />
               </Route>
