@@ -28,6 +28,12 @@ This application provides a full-featured appointment scheduling system with the
 - Material UI/Tailwind CSS
 - FullCalendar for calendar interface
 
+### Testing
+- JUnit & Mockito for backend unit tests
+- React Testing Library for frontend component tests
+- Cypress for end-to-end testing
+- Jest for JavaScript unit tests
+
 ### Deployment
 - Docker and Docker Compose
 - Railway (Backend and Database)
@@ -39,10 +45,51 @@ This application provides a full-featured appointment scheduling system with the
 For detailed information about the implementation plan, technical components, and deployment strategy, please refer to:
 
 - [Implementation Plan](docs/implementation-plan.md)
+- [Cypress E2E Tests](cypress/README.md)
 
 ## Getting Started
 
-Instructions for setting up and running the project will be added as development progresses.
+### Prerequisites
+- Node.js (v14 or higher)
+- npm (v6 or higher)
+- Java 17 or higher
+- Maven
+- Docker and Docker Compose (optional, for containerized setup)
+
+### Running the Application
+
+#### Backend
+```bash
+cd backend
+./mvnw spring-boot:run
+```
+
+#### Frontend
+```bash
+cd frontend
+npm install
+npm start
+```
+
+#### Running Tests
+```bash
+# Backend tests
+cd backend
+./mvnw test
+
+# Frontend component tests
+cd frontend
+npm test
+
+# End-to-end tests
+npm run cypress:open  # Interactive mode
+npm run cypress:run   # Headless mode
+```
+
+### Docker Setup
+```bash
+docker-compose up -d
+```
 
 ## License
 
