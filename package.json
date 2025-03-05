@@ -1,0 +1,39 @@
+{
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@fullcalendar/daygrid": "^6.1.15",
+    "@fullcalendar/interaction": "^6.1.15",
+    "@fullcalendar/react": "^6.1.15",
+    "@fullcalendar/timegrid": "^6.1.15",
+    "@mui/icons-material": "^6.4.6",
+    "@mui/material": "^6.4.6",
+    "@mui/x-date-pickers": "^7.27.1",
+    "@reduxjs/toolkit": "^2.6.0",
+    "axios": "^1.8.1",
+    "date-fns": "^4.1.0",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.2.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "cypress:auth": "cypress run --spec \"cypress/e2e/auth.cy.js\"",
+    "cypress:services": "cypress run --spec \"cypress/e2e/services.cy.js\"",
+    "cypress:appointments": "cypress run --spec \"cypress/e2e/appointments.cy.js\"",
+    "cypress:availability": "cypress run --spec \"cypress/e2e/availability.cy.js\"",
+    "cypress:profile": "cypress run --spec \"cypress/e2e/profile.cy.js\"",
+    "cypress:dashboard": "cypress run --spec \"cypress/e2e/dashboard.cy.js\"",
+    "test:e2e": "cypress run",
+    "test:e2e:ci": "cypress run --headless"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/redux-mock-store": "^1.5.0",
+    "cypress": "^14.1.0",
+    "redux-mock-store": "^1.5.5"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "admin": {
+    "email": "admin@demo.com",
+    "password": "demo123",
+    "firstName": "Admin",
+    "lastName": "User",
+    "userType": "ADMIN"
+  },
+  "provider": {
+    "email": "provider@demo.com",
+    "password": "demo123",
+    "firstName": "Provider",
+    "lastName": "User",
+    "userType": "PROVIDER"
+  },
+  "client": {
+    "email": "client@demo.com",
+    "password": "demo123",
+    "firstName": "Client",
+    "lastName": "User",
+    "userType": "CLIENT"
+  },
+  "newUser": {
+    "email": "newuser@example.com",
+    "password": "password123",
+    "firstName": "New",
+    "lastName": "User",
+    "userType": "CLIENT"
+  }
+}
