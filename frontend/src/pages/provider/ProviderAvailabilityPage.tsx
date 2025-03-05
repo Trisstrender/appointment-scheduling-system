@@ -1,38 +1,40 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
-  Grid,
-  Paper,
   Typography,
-  Button,
-  Divider,
+  Paper,
   Tabs,
   Tab,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  TextField,
-  IconButton,
+  Button,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Grid,
+  IconButton,
+  Divider,
+  Card,
+  CardContent,
+  CardActions,
   Chip,
-  SelectChangeEvent,
-  FormHelperText,
+  Alert,
+  AlertTitle,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { format, parseISO, addMinutes, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import EventIcon from '@mui/icons-material/Event';
-import RepeatIcon from '@mui/icons-material/Repeat';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { useAuth } from '../../hooks/useAuth';
 import { availabilityService } from '../../api';
 import { Availability } from '../../types';
@@ -44,7 +46,7 @@ interface TabPanelProps {
   value: number;
 }
 
-const TabPanel = (props: TabPanelProps) => {
+function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
 
   return (
@@ -55,356 +57,301 @@ const TabPanel = (props: TabPanelProps) => {
       aria-labelledby={`availability-tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
     </div>
   );
-};
+}
+
+function a11yProps(index: number) {
+  return {
+    id: `availability-tab-${index}`,
+    'aria-controls': `availability-tabpanel-${index}`,
+  };
+}
 
 const ProviderAvailabilityPage: React.FC = () => {
   const { user } = useAuth();
-  const [tabValue, setTabValue] = useState(0);
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  
-  // Dialog state
-  const [dialogOpen, setDialogOpen] = useState<boolean>(false);
-  const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [selectedAvailability, setSelectedAvailability] = useState<Availability | null>(null);
-  
+  const [tabValue, setTabValue] = useState(0);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(true);
+  const [editingAvailability, setEditingAvailability] = useState<Availability | null>(null);
+
   // Form state
-  const [formData, setFormData] = useState({
-    recurring: true,
-    dayOfWeek: 1, // Monday
-    specificDate: new Date(),
-    startTime: new Date(new Date().setHours(9, 0, 0, 0)),
-    endTime: new Date(new Date().setHours(17, 0, 0, 0)),
-  });
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [dayOfWeek, setDayOfWeek] = useState<number | ''>('');
+  const [specificDate, setSpecificDate] = useState<Date | null>(null);
+  const [startTime, setStartTime] = useState<Date | null>(null);
+  const [endTime, setEndTime] = useState<Date | null>(null);
 
   useEffect(() => {
-    const fetchAvailabilities = async () => {
-      try {
-        if (user?.id) {
-          setIsLoading(true);
-          const providerAvailabilities = await availabilityService.getAvailabilitiesByProviderId(user.id);
-          setAvailabilities(providerAvailabilities);
-        }
-      } catch (err) {
-        setError('Failed to load availabilities. Please try again later.');
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchAvailabilities();
   }, [user?.id]);
+
+  const fetchAvailabilities = async () => {
+    try {
+      if (user?.id) {
+        setIsLoading(true);
+        const response = await availabilityService.getAvailabilitiesByProviderId(user.id);
+        // Map the API response to match the expected Availability type
+        const availabilityData = response.data.data.map((item: any) => ({
+          ...item,
+          // Ensure required fields have default values if they're undefined
+          createdAt: item.createdAt || '',
+          updatedAt: item.updatedAt || '',
+        }));
+        setAvailabilities(availabilityData);
+      }
+    } catch (err) {
+      setError('Failed to load availabilities. Please try again later.');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
-  const handleOpenDialog = (availability?: Availability) => {
+  const handleOpenDialog = (recurring: boolean = true, availability?: Availability) => {
+    setIsRecurring(recurring);
     if (availability) {
-      // Edit mode
-      setIsEditing(true);
-      setSelectedAvailability(availability);
-      
-      const startTime = parseISO(availability.startTime);
-      const endTime = parseISO(availability.endTime);
-      
-      setFormData({
-        recurring: availability.recurring,
-        dayOfWeek: availability.dayOfWeek || 1,
-        specificDate: availability.specificDate ? new Date(availability.specificDate) : new Date(),
-        startTime,
-        endTime,
-      });
+      setEditingAvailability(availability);
+      if (recurring && availability.dayOfWeek !== undefined) {
+        setDayOfWeek(availability.dayOfWeek);
+      } else if (!recurring && availability.specificDate) {
+        setSpecificDate(new Date(availability.specificDate));
+      }
+      setStartTime(new Date(`2023-01-01T${availability.startTime}`));
+      setEndTime(new Date(`2023-01-01T${availability.endTime}`));
     } else {
-      // Add mode
-      setIsEditing(false);
-      setSelectedAvailability(null);
-      setFormData({
-        recurring: true,
-        dayOfWeek: 1,
-        specificDate: new Date(),
-        startTime: new Date(new Date().setHours(9, 0, 0, 0)),
-        endTime: new Date(new Date().setHours(17, 0, 0, 0)),
-      });
+      resetForm();
     }
-    
-    setFormErrors({});
-    setDialogOpen(true);
+    setOpenDialog(true);
   };
 
   const handleCloseDialog = () => {
-    setDialogOpen(false);
+    setOpenDialog(false);
+    resetForm();
   };
 
-  const handleFormChange = (field: string, value: any) => {
-    setFormData({
-      ...formData,
-      [field]: value,
-    });
-    
-    // Clear error for this field
-    if (formErrors[field]) {
-      setFormErrors({
-        ...formErrors,
-        [field]: '',
-      });
-    }
-  };
-
-  const handleRecurringChange = (event: SelectChangeEvent<string>) => {
-    const recurring = event.target.value === 'true';
-    setFormData({
-      ...formData,
-      recurring,
-    });
-  };
-
-  const handleDayOfWeekChange = (event: SelectChangeEvent<number>) => {
-    setFormData({
-      ...formData,
-      dayOfWeek: event.target.value as number,
-    });
+  const resetForm = () => {
+    setEditingAvailability(null);
+    setDayOfWeek('');
+    setSpecificDate(null);
+    setStartTime(null);
+    setEndTime(null);
   };
 
   const validateForm = (): boolean => {
-    const errors: Record<string, string> = {};
-    let isValid = true;
-    
-    // Validate times
-    if (!formData.startTime) {
-      errors.startTime = 'Start time is required';
-      isValid = false;
+    if (isRecurring && dayOfWeek === '') {
+      setError('Please select a day of the week');
+      return false;
     }
-    
-    if (!formData.endTime) {
-      errors.endTime = 'End time is required';
-      isValid = false;
+    if (!isRecurring && !specificDate) {
+      setError('Please select a specific date');
+      return false;
     }
-    
-    if (formData.startTime && formData.endTime && !isAfter(formData.endTime, formData.startTime)) {
-      errors.endTime = 'End time must be after start time';
-      isValid = false;
+    if (!startTime) {
+      setError('Please select a start time');
+      return false;
     }
-    
-    // For specific date, validate that the date is in the future
-    if (!formData.recurring && formData.specificDate) {
-      const today = startOfDay(new Date());
-      if (isBefore(formData.specificDate, today)) {
-        errors.specificDate = 'Date must be in the future';
-        isValid = false;
-      }
+    if (!endTime) {
+      setError('Please select an end time');
+      return false;
     }
-    
-    setFormErrors(errors);
-    return isValid;
+    if (startTime >= endTime) {
+      setError('End time must be after start time');
+      return false;
+    }
+    return true;
   };
 
-  const handleSubmit = async () => {
-    if (!validateForm()) {
-      return;
-    }
-    
+  const formatTimeForAPI = (date: Date): string => {
+    return date.toTimeString().split(' ')[0];
+  };
+
+  const handleSaveAvailability = async () => {
     try {
-      if (!user?.id) return;
+      if (!validateForm()) return;
+
+      setError(null);
       
-      const availabilityData: Partial<Availability> = {
-        providerId: user.id,
-        recurring: formData.recurring,
-        startTime: formData.startTime.toISOString(),
-        endTime: formData.endTime.toISOString(),
+      const availabilityData = {
+        recurring: isRecurring,
+        dayOfWeek: isRecurring ? dayOfWeek as number : undefined,
+        specificDate: !isRecurring && specificDate ? specificDate.toISOString().split('T')[0] : undefined,
+        startTime: startTime ? formatTimeForAPI(startTime) : '',
+        endTime: endTime ? formatTimeForAPI(endTime) : '',
       };
-      
-      if (formData.recurring) {
-        availabilityData.dayOfWeek = formData.dayOfWeek;
-      } else {
-        availabilityData.specificDate = format(formData.specificDate, 'yyyy-MM-dd');
-      }
-      
-      let updatedAvailability: Availability;
-      
-      if (isEditing && selectedAvailability) {
+
+      if (editingAvailability) {
         // Update existing availability
-        updatedAvailability = await availabilityService.updateAvailability(
-          selectedAvailability.id,
-          availabilityData
-        );
-        
-        // Update in local state
-        setAvailabilities(
-          availabilities.map((a) => (a.id === updatedAvailability.id ? updatedAvailability : a))
-        );
-        
+        await availabilityService.updateAvailability(editingAvailability.id, availabilityData);
         setSuccess('Availability updated successfully');
       } else {
         // Create new availability
-        updatedAvailability = await availabilityService.createAvailability(user.id, availabilityData);
-        
-        // Add to local state
-        setAvailabilities([...availabilities, updatedAvailability]);
-        
-        setSuccess('Availability added successfully');
+        if (user?.id) {
+          await availabilityService.createAvailability(user.id, availabilityData);
+          setSuccess('Availability added successfully');
+        }
       }
-      
+
       handleCloseDialog();
-    } catch (err) {
-      setError('Failed to save availability. Please try again later.');
+      fetchAvailabilities();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to save availability');
       console.error(err);
     }
   };
 
-  const handleDelete = async (availabilityId: number) => {
+  const handleDeleteAvailability = async (id: number) => {
     try {
-      await availabilityService.deleteAvailability(availabilityId);
-      
-      // Remove from local state
-      setAvailabilities(availabilities.filter((a) => a.id !== availabilityId));
-      
+      await availabilityService.deleteAvailability(id);
       setSuccess('Availability deleted successfully');
-    } catch (err) {
-      setError('Failed to delete availability. Please try again later.');
+      fetchAvailabilities();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to delete availability');
       console.error(err);
     }
   };
 
   const formatTime = (timeStr: string) => {
-    const date = new Date(timeStr);
-    return format(date, 'h:mm a');
+    const date = new Date(`2023-01-01T${timeStr}`);
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
   };
 
-  const getDayOfWeekName = (dayOfWeek: number) => {
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+
+  const getDayName = (dayOfWeek: number): string => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return days[dayOfWeek];
-  };
-
-  const getRecurringAvailabilities = () => {
-    return availabilities.filter((a) => a.recurring);
-  };
-
-  const getSpecificDateAvailabilities = () => {
-    return availabilities.filter((a) => !a.recurring);
+    return days[dayOfWeek] || '';
   };
 
   if (isLoading) {
     return <LoadingSpinner message="Loading your availability..." />;
   }
 
-  const recurringAvailabilities = getRecurringAvailabilities();
-  const specificDateAvailabilities = getSpecificDateAvailabilities();
+  const recurringAvailabilities = availabilities.filter(a => a.recurring);
+  const specificAvailabilities = availabilities.filter(a => !a.recurring);
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Paper sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h4">Manage Availability</Typography>
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h4" component="h1">
+            Manage Availability
+          </Typography>
+          <Box>
             <Button
               variant="contained"
               color="primary"
-              startIcon={<AddIcon />}
-              onClick={() => handleOpenDialog()}
+              startIcon={<AccessTimeIcon />}
+              onClick={() => handleOpenDialog(true)}
+              sx={{ mr: 1 }}
             >
-              Add Availability
+              Add Weekly Hours
+            </Button>
+            <Button
+              variant="contained"
+              color="secondary"
+              startIcon={<EventIcon />}
+              onClick={() => handleOpenDialog(false)}
+            >
+              Add Special Date
             </Button>
           </Box>
-          
-          <Typography variant="body1" color="text.secondary" paragraph>
-            Set your regular working hours or specific dates when you're available for appointments.
-          </Typography>
-          
-          {error && (
-            <Typography color="error" sx={{ mb: 3 }}>
-              {error}
-            </Typography>
-          )}
-          
-          {success && (
-            <Typography color="success.main" sx={{ mb: 3 }}>
-              {success}
-            </Typography>
-          )}
-          
-          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs value={tabValue} onChange={handleTabChange} aria-label="availability tabs">
-              <Tab
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <RepeatIcon sx={{ mr: 1 }} />
-                    <span>Weekly Schedule ({recurringAvailabilities.length})</span>
-                  </Box>
-                }
-                id="availability-tab-0"
-              />
-              <Tab
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <EventIcon sx={{ mr: 1 }} />
-                    <span>Specific Dates ({specificDateAvailabilities.length})</span>
-                  </Box>
-                }
-                id="availability-tab-1"
-              />
-            </Tabs>
-          </Box>
-          
-          <TabPanel value={tabValue} index={0}>
-            {recurringAvailabilities.length === 0 ? (
-              <Box sx={{ textAlign: 'center', py: 4 }}>
-                <Typography variant="h6" color="text.secondary" gutterBottom>
-                  You haven't set any weekly availability yet.
-                </Typography>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<AddIcon />}
-                  onClick={() => handleOpenDialog()}
-                  sx={{ mt: 2 }}
-                >
-                  Add Weekly Availability
-                </Button>
-              </Box>
-            ) : (
-              <Grid container spacing={3}>
-                {[0, 1, 2, 3, 4, 5, 6].map((day) => {
-                  const dayAvailabilities = recurringAvailabilities.filter((a) => a.dayOfWeek === day);
-                  
-                  return (
-                    <Grid item xs={12} key={day}>
-                      <Paper
-                        variant="outlined"
-                        sx={{
-                          p: 2,
-                          borderColor: dayAvailabilities.length > 0 ? 'primary.main' : 'divider',
-                          borderWidth: dayAvailabilities.length > 0 ? 2 : 1,
-                        }}
-                      >
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                          <Typography variant="h6">{getDayOfWeekName(day)}</Typography>
+        </Box>
+        <Typography variant="body1" color="text.secondary">
+          Set your regular working hours and special dates to let clients know when you're available for appointments.
+        </Typography>
+      </Paper>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+          <AlertTitle>Error</AlertTitle>
+          {error}
+        </Alert>
+      )}
+
+      {success && (
+        <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess(null)}>
+          <AlertTitle>Success</AlertTitle>
+          {success}
+        </Alert>
+      )}
+
+      <Paper sx={{ width: '100%', mb: 3 }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs 
+            value={tabValue} 
+            onChange={handleTabChange} 
+            aria-label="availability tabs"
+            data-testid="availability-tabs"
+          >
+            <Tab label="Weekly Schedule" {...a11yProps(0)} data-testid="weekly-tab" />
+            <Tab label="Special Dates" {...a11yProps(1)} data-testid="special-dates-tab" />
+            <Tab label="Calendar View" {...a11yProps(2)} data-testid="calendar-view-tab" />
+          </Tabs>
+        </Box>
+
+        {/* Weekly Schedule Tab */}
+        <TabPanel value={tabValue} index={0}>
+          {recurringAvailabilities.length === 0 ? (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                You haven't set up your weekly schedule yet
+              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<AddIcon />}
+                onClick={() => handleOpenDialog(true)}
+                sx={{ mt: 2 }}
+              >
+                Add Weekly Hours
+              </Button>
+            </Box>
+          ) : (
+            <Grid container spacing={3}>
+              {[0, 1, 2, 3, 4, 5, 6].map((day) => {
+                const dayAvailabilities = recurringAvailabilities.filter(a => a.dayOfWeek === day);
+                return (
+                  <Grid item xs={12} key={day}>
+                    <Card sx={{ mb: 2 }}>
+                      <CardContent>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Typography variant="h6">{getDayName(day)}</Typography>
                           <Button
                             size="small"
                             startIcon={<AddIcon />}
                             onClick={() => {
-                              setFormData({
-                                ...formData,
-                                recurring: true,
-                                dayOfWeek: day,
-                              });
-                              handleOpenDialog();
+                              setDayOfWeek(day);
+                              handleOpenDialog(true);
                             }}
                           >
-                            Add
+                            Add Hours
                           </Button>
                         </Box>
-                        
+                        <Divider sx={{ my: 2 }} />
                         {dayAvailabilities.length === 0 ? (
                           <Typography variant="body2" color="text.secondary">
-                            No availability set for this day.
+                            No availability set for this day
                           </Typography>
                         ) : (
                           dayAvailabilities.map((availability) => (
@@ -416,8 +363,9 @@ const ProviderAvailabilityPage: React.FC = () => {
                                 alignItems: 'center',
                                 p: 1,
                                 mb: 1,
+                                border: '1px solid',
+                                borderColor: 'divider',
                                 borderRadius: 1,
-                                bgcolor: 'background.default',
                               }}
                             >
                               <Typography>
@@ -427,141 +375,121 @@ const ProviderAvailabilityPage: React.FC = () => {
                                 <IconButton
                                   size="small"
                                   color="primary"
-                                  onClick={() => handleOpenDialog(availability)}
-                                  aria-label="edit"
+                                  onClick={() => handleOpenDialog(true, availability)}
                                 >
-                                  <EditIcon />
+                                  <EditIcon fontSize="small" />
                                 </IconButton>
                                 <IconButton
                                   size="small"
                                   color="error"
-                                  onClick={() => handleDelete(availability.id)}
-                                  aria-label="delete"
+                                  onClick={() => handleDeleteAvailability(availability.id)}
                                 >
-                                  <DeleteIcon />
+                                  <DeleteIcon fontSize="small" />
                                 </IconButton>
                               </Box>
                             </Box>
                           ))
                         )}
-                      </Paper>
-                    </Grid>
-                  );
-                })}
-              </Grid>
-            )}
-          </TabPanel>
-          
-          <TabPanel value={tabValue} index={1}>
-            {specificDateAvailabilities.length === 0 ? (
-              <Box sx={{ textAlign: 'center', py: 4 }}>
-                <Typography variant="h6" color="text.secondary" gutterBottom>
-                  You haven't set any specific date availability yet.
-                </Typography>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<AddIcon />}
-                  onClick={() => {
-                    setFormData({
-                      ...formData,
-                      recurring: false,
-                    });
-                    handleOpenDialog();
-                  }}
-                  sx={{ mt: 2 }}
-                >
-                  Add Specific Date
-                </Button>
-              </Box>
-            ) : (
-              <Grid container spacing={3}>
-                {specificDateAvailabilities
-                  .sort((a, b) => {
-                    if (!a.specificDate || !b.specificDate) return 0;
-                    return new Date(a.specificDate).getTime() - new Date(b.specificDate).getTime();
-                  })
-                  .map((availability) => (
-                    <Grid item xs={12} sm={6} md={4} key={availability.id}>
-                      <Paper
-                        variant="outlined"
-                        sx={{
-                          p: 2,
-                          height: '100%',
-                          display: 'flex',
-                          flexDirection: 'column',
-                        }}
-                      >
-                        <Box sx={{ mb: 2 }}>
-                          <Typography variant="h6">
-                            {availability.specificDate
-                              ? format(new Date(availability.specificDate), 'EEEE, MMMM d, yyyy')
-                              : 'Unknown Date'}
-                          </Typography>
-                          <Typography variant="body1">
-                            {formatTime(availability.startTime)} - {formatTime(availability.endTime)}
-                          </Typography>
-                        </Box>
-                        
-                        <Box sx={{ mt: 'auto', display: 'flex', justifyContent: 'flex-end' }}>
-                          <IconButton
-                            size="small"
-                            color="primary"
-                            onClick={() => handleOpenDialog(availability)}
-                            aria-label="edit"
-                          >
-                            <EditIcon />
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => handleDelete(availability.id)}
-                            aria-label="delete"
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </Box>
-                      </Paper>
-                    </Grid>
-                  ))}
-              </Grid>
-            )}
-          </TabPanel>
-        </Paper>
-        
-        {/* Add/Edit Availability Dialog */}
-        <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-          <DialogTitle>
-            {isEditing ? 'Edit Availability' : 'Add Availability'}
-          </DialogTitle>
-          <DialogContent>
-            <Grid container spacing={3} sx={{ mt: 0 }}>
-              <Grid item xs={12}>
-                <FormControl fullWidth>
-                  <InputLabel id="recurring-label">Availability Type</InputLabel>
-                  <Select
-                    labelId="recurring-label"
-                    id="recurring"
-                    value={formData.recurring.toString()}
-                    label="Availability Type"
-                    onChange={handleRecurringChange}
-                  >
-                    <MenuItem value="true">Weekly (Recurring)</MenuItem>
-                    <MenuItem value="false">Specific Date</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              
-              {formData.recurring ? (
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          )}
+        </TabPanel>
+
+        {/* Special Dates Tab */}
+        <TabPanel value={tabValue} index={1}>
+          {specificAvailabilities.length === 0 ? (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                You haven't set up any special dates
+              </Typography>
+              <Button
+                variant="contained"
+                color="secondary"
+                startIcon={<AddIcon />}
+                onClick={() => handleOpenDialog(false)}
+                sx={{ mt: 2 }}
+              >
+                Add Special Date
+              </Button>
+            </Box>
+          ) : (
+            <Grid container spacing={3}>
+              {specificAvailabilities
+                .sort((a, b) => new Date(a.specificDate || '').getTime() - new Date(b.specificDate || '').getTime())
+                .map((availability) => (
+                  <Grid item xs={12} sm={6} md={4} key={availability.id}>
+                    <Card>
+                      <CardContent>
+                        <Typography variant="h6" gutterBottom>
+                          {availability.specificDate ? formatDate(availability.specificDate) : 'No date specified'}
+                        </Typography>
+                        <Typography variant="body1">
+                          {formatTime(availability.startTime)} - {formatTime(availability.endTime)}
+                        </Typography>
+                      </CardContent>
+                      <CardActions>
+                        <Button
+                          size="small"
+                          startIcon={<EditIcon />}
+                          onClick={() => handleOpenDialog(false, availability)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          size="small"
+                          color="error"
+                          startIcon={<DeleteIcon />}
+                          onClick={() => handleDeleteAvailability(availability.id)}
+                        >
+                          Delete
+                        </Button>
+                      </CardActions>
+                    </Card>
+                  </Grid>
+                ))}
+            </Grid>
+          )}
+        </TabPanel>
+
+        {/* Calendar View Tab */}
+        <TabPanel value={tabValue} index={2}>
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="h6" gutterBottom>
+              Calendar View Coming Soon
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              We're working on a calendar view to help you visualize your availability and appointments.
+            </Typography>
+          </Box>
+        </TabPanel>
+      </Paper>
+
+      {/* Add/Edit Availability Dialog */}
+      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          {editingAvailability
+            ? 'Edit Availability'
+            : isRecurring
+            ? 'Add Weekly Availability'
+            : 'Add Special Date Availability'}
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2 }}>
+            <Grid container spacing={3}>
+              {isRecurring ? (
                 <Grid item xs={12}>
-                  <FormControl fullWidth>
+                  <FormControl fullWidth required>
                     <InputLabel id="day-of-week-label">Day of Week</InputLabel>
                     <Select
                       labelId="day-of-week-label"
-                      id="day-of-week"
-                      value={formData.dayOfWeek}
+                      id="dayOfWeek"
+                      value={dayOfWeek}
                       label="Day of Week"
-                      onChange={handleDayOfWeekChange}
+                      onChange={(e) => setDayOfWeek(e.target.value as number)}
                     >
                       <MenuItem value={0}>Sunday</MenuItem>
                       <MenuItem value={1}>Monday</MenuItem>
@@ -575,61 +503,64 @@ const ProviderAvailabilityPage: React.FC = () => {
                 </Grid>
               ) : (
                 <Grid item xs={12}>
-                  <DatePicker
-                    label="Date"
-                    value={formData.specificDate}
-                    onChange={(date) => handleFormChange('specificDate', date)}
+                  <LocalizationProvider dateAdapter={AdapterDateFns}>
+                    <DatePicker
+                      label="Date"
+                      value={specificDate}
+                      onChange={(newValue) => setSpecificDate(newValue)}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          required: true,
+                        },
+                      }}
+                    />
+                  </LocalizationProvider>
+                </Grid>
+              )}
+
+              <Grid item xs={12} sm={6}>
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <TimePicker
+                    label="Start Time"
+                    value={startTime}
+                    onChange={(newValue) => setStartTime(newValue)}
                     slotProps={{
                       textField: {
                         fullWidth: true,
-                        error: !!formErrors.specificDate,
-                        helperText: formErrors.specificDate,
+                        required: true,
                       },
                     }}
                   />
-                </Grid>
-              )}
-              
-              <Grid item xs={12} sm={6}>
-                <TimePicker
-                  label="Start Time"
-                  value={formData.startTime}
-                  onChange={(time) => handleFormChange('startTime', time)}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      error: !!formErrors.startTime,
-                      helperText: formErrors.startTime,
-                    },
-                  }}
-                />
+                </LocalizationProvider>
               </Grid>
-              
+
               <Grid item xs={12} sm={6}>
-                <TimePicker
-                  label="End Time"
-                  value={formData.endTime}
-                  onChange={(time) => handleFormChange('endTime', time)}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      error: !!formErrors.endTime,
-                      helperText: formErrors.endTime,
-                    },
-                  }}
-                />
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <TimePicker
+                    label="End Time"
+                    value={endTime}
+                    onChange={(newValue) => setEndTime(newValue)}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        required: true,
+                      },
+                    }}
+                  />
+                </LocalizationProvider>
               </Grid>
             </Grid>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseDialog}>Cancel</Button>
-            <Button onClick={handleSubmit} variant="contained" color="primary">
-              {isEditing ? 'Update' : 'Add'}
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </Container>
-    </LocalizationProvider>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button onClick={handleSaveAvailability} variant="contained" color="primary">
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
   );
 };
 

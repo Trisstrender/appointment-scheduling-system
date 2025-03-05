@@ -1,13 +1,13 @@
 import ProviderDashboardPage from './ProviderDashboardPage';
 import ProviderAppointmentsPage from './ProviderAppointmentsPage';
-import ProviderProfilePage from './ProviderProfilePage';
-import ProviderAvailabilityPage from './ProviderAvailabilityPage';
 import ProviderServicesPage from './ProviderServicesPage';
+import ProviderAvailabilityPage from './ProviderAvailabilityPage';
+import ProviderProfilePage from './ProviderProfilePage';
 
 export {
   ProviderDashboardPage,
   ProviderAppointmentsPage,
-  ProviderProfilePage,
-  ProviderAvailabilityPage,
   ProviderServicesPage,
+  ProviderAvailabilityPage,
+  ProviderProfilePage,
 };

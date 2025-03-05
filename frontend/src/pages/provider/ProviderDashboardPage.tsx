@@ -1,13 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Container, Grid, Paper, Typography, Button, Divider, Chip } from '@mui/material';
+import { 
+  Box, 
+  Container, 
+  Grid, 
+  Paper, 
+  Typography, 
+  Button, 
+  Divider, 
+  Card, 
+  CardContent,
+  CardActions,
+  Chip,
+  Avatar
+} from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
+import EventIcon from '@mui/icons-material/Event';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
+import PersonIcon from '@mui/icons-material/Person';
 import { useAuth } from '../../hooks/useAuth';
 import { appointmentService, serviceService, availabilityService } from '../../api';
 import { Appointment, Service, Availability } from '../../types';
 import { LoadingSpinner } from '../../components/common';
-import EventAvailableIcon from '@mui/icons-material/EventAvailable';
-import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
-import TodayIcon from '@mui/icons-material/Today';
 
 const ProviderDashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -18,25 +32,45 @@ const ProviderDashboardPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchDashboardData = async () => {
       try {
         if (user?.id) {
           setIsLoading(true);
           
-          // Get today's date in YYYY-MM-DD format
-          const today = new Date().toISOString().split('T')[0];
-          
           // Fetch today's appointments
-          const appointments = await appointmentService.getAppointmentsByProviderIdAndDate(user.id, today);
-          setTodayAppointments(appointments);
+          const today = new Date();
+          const formattedDate = today.toISOString().split('T')[0];
+          // Using getAppointmentsByProviderId and filtering for today's date
+          const appointmentsResponse = await appointmentService.getAppointmentsByProviderId(user.id);
+          const appointmentsData = appointmentsResponse.data.data
+            .filter((appointment: any) => appointment.startTime.includes(formattedDate))
+            .map((item: any) => ({
+              ...item,
+              // Ensure required fields have default values if they're undefined
+              createdAt: item.createdAt || '',
+              updatedAt: item.updatedAt || '',
+            }));
+          setTodayAppointments(appointmentsData);
           
           // Fetch services
-          const providerServices = await serviceService.getServicesByProviderId(user.id, true);
-          setServices(providerServices);
+          const providerServicesResponse = await serviceService.getServicesByProviderId(user.id);
+          const servicesData = providerServicesResponse.data.data.map((item: any) => ({
+            ...item,
+            // Ensure required fields have default values if they're undefined
+            createdAt: item.createdAt || '',
+            updatedAt: item.updatedAt || '',
+          }));
+          setServices(servicesData);
           
           // Fetch availabilities
-          const providerAvailabilities = await availabilityService.getAvailabilitiesByProviderId(user.id, true);
-          setAvailabilities(providerAvailabilities);
+          const providerAvailabilitiesResponse = await availabilityService.getAvailabilitiesByProviderId(user.id);
+          const availabilityData = providerAvailabilitiesResponse.data.data.map((item: any) => ({
+            ...item,
+            // Ensure required fields have default values if they're undefined
+            createdAt: item.createdAt || '',
+            updatedAt: item.updatedAt || '',
+          }));
+          setAvailabilities(availabilityData);
         }
       } catch (err) {
         setError('Failed to load dashboard data. Please try again later.');
@@ -46,7 +80,7 @@ const ProviderDashboardPage: React.FC = () => {
       }
     };
 
-    fetchData();
+    fetchDashboardData();
   }, [user?.id]);
 
   const formatTime = (timeStr: string) => {
@@ -58,22 +92,28 @@ const ProviderDashboardPage: React.FC = () => {
     });
   };
 
-  const formatDateTime = (dateTimeStr: string) => {
-    const date = new Date(dateTimeStr);
-    return date.toLocaleString('en-US', {
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
     });
   };
 
-  const getDayOfWeekName = (dayOfWeek: number) => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return days[dayOfWeek];
+  const getStatusColor = (status: string) => {
+    switch (status.toUpperCase()) {
+      case 'CONFIRMED':
+        return 'success';
+      case 'PENDING':
+        return 'warning';
+      case 'CANCELLED':
+        return 'error';
+      case 'COMPLETED':
+        return 'info';
+      default:
+        return 'default';
+    }
   };
 
   if (isLoading) {
@@ -95,6 +135,45 @@ const ProviderDashboardPage: React.FC = () => {
           </Paper>
         </Grid>
 
+        {/* Stats Overview */}
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
+            <Typography variant="h6" gutterBottom>
+              Overview
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+            <Grid container spacing={2}>
+              <Grid item xs={6}>
+                <Card sx={{ height: '100%', bgcolor: 'primary.light', color: 'primary.contrastText' }}>
+                  <CardContent>
+                    <EventIcon />
+                    <Typography variant="h4">{todayAppointments.length}</Typography>
+                    <Typography variant="body2">Today's Appointments</Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={6}>
+                <Card sx={{ height: '100%', bgcolor: 'secondary.light', color: 'secondary.contrastText' }}>
+                  <CardContent>
+                    <BusinessCenterIcon />
+                    <Typography variant="h4">{services.length}</Typography>
+                    <Typography variant="body2">Active Services</Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12}>
+                <Card sx={{ height: '100%', bgcolor: 'info.light', color: 'info.contrastText' }}>
+                  <CardContent>
+                    <AccessTimeIcon />
+                    <Typography variant="h4">{availabilities.length}</Typography>
+                    <Typography variant="body2">Availability Slots</Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+          </Paper>
+        </Grid>
+
         {/* Quick Actions */}
         <Grid item xs={12} md={4}>
           <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -102,36 +181,36 @@ const ProviderDashboardPage: React.FC = () => {
               Quick Actions
             </Typography>
             <Divider sx={{ mb: 2 }} />
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Button
-                component={RouterLink}
-                to="/provider/services/new"
-                variant="contained"
-                color="primary"
-                fullWidth
-                startIcon={<BusinessCenterIcon />}
-              >
-                Add New Service
-              </Button>
-              <Button
-                component={RouterLink}
-                to="/provider/availability/new"
-                variant="contained"
-                color="primary"
-                fullWidth
-                startIcon={<EventAvailableIcon />}
-              >
-                Add Availability
-              </Button>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, flexGrow: 1 }}>
               <Button
                 component={RouterLink}
                 to="/provider/appointments"
-                variant="outlined"
+                variant="contained"
                 color="primary"
                 fullWidth
-                startIcon={<TodayIcon />}
+                startIcon={<EventIcon />}
               >
-                View All Appointments
+                Manage Appointments
+              </Button>
+              <Button
+                component={RouterLink}
+                to="/provider/services"
+                variant="contained"
+                color="secondary"
+                fullWidth
+                startIcon={<BusinessCenterIcon />}
+              >
+                Manage Services
+              </Button>
+              <Button
+                component={RouterLink}
+                to="/provider/availability"
+                variant="contained"
+                color="info"
+                fullWidth
+                startIcon={<AccessTimeIcon />}
+              >
+                Manage Availability
               </Button>
               <Button
                 component={RouterLink}
@@ -139,6 +218,7 @@ const ProviderDashboardPage: React.FC = () => {
                 variant="outlined"
                 color="primary"
                 fullWidth
+                startIcon={<PersonIcon />}
               >
                 Edit Profile
               </Button>
@@ -147,8 +227,8 @@ const ProviderDashboardPage: React.FC = () => {
         </Grid>
 
         {/* Today's Appointments */}
-        <Grid item xs={12} md={8}>
-          <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column' }}>
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column', height: '100%' }}>
             <Typography variant="h6" gutterBottom>
               Today's Appointments
             </Typography>
@@ -163,52 +243,46 @@ const ProviderDashboardPage: React.FC = () => {
                 You don't have any appointments scheduled for today.
               </Typography>
             ) : (
-              todayAppointments.map((appointment) => (
-                <Box
-                  key={appointment.id}
-                  sx={{
-                    mb: 2,
-                    p: 2,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: 1,
-                  }}
-                >
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={8}>
-                      <Typography variant="h6">{appointment.serviceName}</Typography>
-                      <Typography variant="body1">Client: {appointment.clientName}</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {formatTime(appointment.startTime)} - {formatTime(appointment.endTime)}
-                      </Typography>
-                      {appointment.notes && (
-                        <Typography variant="body2" sx={{ mt: 1 }}>
-                          Notes: {appointment.notes}
-                        </Typography>
-                      )}
-                    </Grid>
-                    <Grid item xs={12} sm={4} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, flexGrow: 1, overflow: 'auto' }}>
+                {todayAppointments.map((appointment) => (
+                  <Box
+                    key={appointment.id}
+                    sx={{
+                      p: 2,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                      <Typography variant="subtitle1">{appointment.serviceName}</Typography>
                       <Chip 
                         label={appointment.status} 
-                        color={
-                          appointment.status === 'CONFIRMED' ? 'success' : 
-                          appointment.status === 'PENDING' ? 'warning' : 
-                          appointment.status === 'CANCELLED' ? 'error' : 'default'
-                        }
-                        sx={{ mr: 1 }}
+                        color={getStatusColor(appointment.status) as any}
+                        size="small"
                       />
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <Avatar sx={{ width: 24, height: 24, mr: 1 }}>
+                        {appointment.clientName?.charAt(0) || 'C'}
+                      </Avatar>
+                      <Typography variant="body2">{appointment.clientName}</Typography>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      {formatTime(appointment.startTime)} - {formatTime(appointment.endTime)}
+                    </Typography>
+                    <CardActions sx={{ p: 0, mt: 1 }}>
                       <Button
                         component={RouterLink}
                         to={`/provider/appointments/${appointment.id}`}
-                        variant="outlined"
                         size="small"
                       >
                         Details
                       </Button>
-                    </Grid>
-                  </Grid>
-                </Box>
-              ))
+                    </CardActions>
+                  </Box>
+                ))}
+              </Box>
             )}
             <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
               <Button
@@ -217,13 +291,13 @@ const ProviderDashboardPage: React.FC = () => {
                 variant="text"
                 color="primary"
               >
-                View All Appointments
+                View All
               </Button>
             </Box>
           </Paper>
         </Grid>
 
-        {/* Services */}
+        {/* Services Overview */}
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column' }}>
             <Typography variant="h6" gutterBottom>
@@ -231,56 +305,86 @@ const ProviderDashboardPage: React.FC = () => {
             </Typography>
             <Divider sx={{ mb: 2 }} />
             {services.length === 0 ? (
-              <Typography variant="body1" color="text.secondary">
-                You haven't added any services yet.{' '}
-                <RouterLink to="/provider/services/new">Add your first service</RouterLink>
-              </Typography>
-            ) : (
-              services.slice(0, 3).map((service) => (
-                <Box
-                  key={service.id}
-                  sx={{
-                    mb: 2,
-                    p: 2,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: 1,
-                  }}
+              <Box sx={{ textAlign: 'center', py: 3 }}>
+                <Typography variant="body1" color="text.secondary" gutterBottom>
+                  You haven't added any services yet.
+                </Typography>
+                <Button
+                  component={RouterLink}
+                  to="/provider/services/new"
+                  variant="contained"
+                  color="primary"
+                  sx={{ mt: 1 }}
                 >
-                  <Typography variant="h6">{service.name}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Duration: {service.durationMinutes} minutes
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Price: ${service.price.toFixed(2)}
-                  </Typography>
-                  <Box sx={{ mt: 1, display: 'flex', justifyContent: 'flex-end' }}>
-                    <Button
-                      component={RouterLink}
-                      to={`/provider/services/${service.id}`}
-                      variant="text"
-                      size="small"
-                    >
-                      Edit
-                    </Button>
-                  </Box>
-                </Box>
-              ))
+                  Add Your First Service
+                </Button>
+              </Box>
+            ) : (
+              <Grid container spacing={2}>
+                {services.slice(0, 4).map((service) => (
+                  <Grid item xs={12} sm={6} key={service.id}>
+                    <Card>
+                      <CardContent>
+                        <Typography variant="h6" noWrap>{service.name}</Typography>
+                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                          {service.durationMinutes} min | ${service.price.toFixed(2)}
+                        </Typography>
+                        <Typography variant="body2" sx={{ 
+                          height: '40px', 
+                          overflow: 'hidden', 
+                          textOverflow: 'ellipsis',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical'
+                        }}>
+                          {service.description}
+                        </Typography>
+                      </CardContent>
+                      <CardActions>
+                        <Button
+                          component={RouterLink}
+                          to={`/provider/services/${service.id}`}
+                          size="small"
+                        >
+                          Edit
+                        </Button>
+                        <Chip 
+                          label={service.active ? 'Active' : 'Inactive'} 
+                          color={service.active ? 'success' : 'default'}
+                          size="small"
+                          sx={{ ml: 'auto' }}
+                        />
+                      </CardActions>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
             )}
-            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-              <Button
-                component={RouterLink}
-                to="/provider/services"
-                variant="text"
-                color="primary"
-              >
-                Manage Services
-              </Button>
-            </Box>
+            {services.length > 0 && (
+              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
+                <Button
+                  component={RouterLink}
+                  to="/provider/services/new"
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                >
+                  Add New Service
+                </Button>
+                <Button
+                  component={RouterLink}
+                  to="/provider/services"
+                  variant="text"
+                  color="primary"
+                >
+                  Manage All Services
+                </Button>
+              </Box>
+            )}
           </Paper>
         </Grid>
 
-        {/* Availability */}
+        {/* Availability Overview */}
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column' }}>
             <Typography variant="h6" gutterBottom>
@@ -288,42 +392,78 @@ const ProviderDashboardPage: React.FC = () => {
             </Typography>
             <Divider sx={{ mb: 2 }} />
             {availabilities.length === 0 ? (
-              <Typography variant="body1" color="text.secondary">
-                You haven't set your availability yet.{' '}
-                <RouterLink to="/provider/availability/new">Set your availability</RouterLink>
-              </Typography>
-            ) : (
-              availabilities.slice(0, 3).map((availability) => (
-                <Box
-                  key={availability.id}
-                  sx={{
-                    mb: 2,
-                    p: 2,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: 1,
-                  }}
+              <Box sx={{ textAlign: 'center', py: 3 }}>
+                <Typography variant="body1" color="text.secondary" gutterBottom>
+                  You haven't set up your availability yet.
+                </Typography>
+                <Button
+                  component={RouterLink}
+                  to="/provider/availability"
+                  variant="contained"
+                  color="primary"
+                  sx={{ mt: 1 }}
                 >
-                  <Typography variant="h6">
-                    {availability.recurring
-                      ? `Every ${getDayOfWeekName(availability.dayOfWeek || 0)}`
-                      : `${new Date(availability.specificDate || '').toLocaleDateString()}`}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {formatTime(availability.startTime)} - {formatTime(availability.endTime)}
-                  </Typography>
-                  <Box sx={{ mt: 1, display: 'flex', justifyContent: 'flex-end' }}>
-                    <Button
-                      component={RouterLink}
-                      to={`/provider/availability/${availability.id}`}
-                      variant="text"
-                      size="small"
-                    >
-                      Edit
-                    </Button>
-                  </Box>
-                </Box>
-              ))
+                  Set Up Availability
+                </Button>
+              </Box>
+            ) : (
+              <Box>
+                <Typography variant="subtitle1" gutterBottom>
+                  Recurring Schedule
+                </Typography>
+                <Grid container spacing={1} sx={{ mb: 3 }}>
+                  {availabilities
+                    .filter(a => a.recurring)
+                    .slice(0, 5)
+                    .map((availability) => (
+                      <Grid item xs={12} key={availability.id}>
+                        <Box sx={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          p: 1,
+                          borderBottom: '1px solid',
+                          borderColor: 'divider'
+                        }}>
+                          <Typography variant="body2">
+                            {getDayName(availability.dayOfWeek || 0)}
+                          </Typography>
+                          <Typography variant="body2">
+                            {formatTime(availability.startTime)} - {formatTime(availability.endTime)}
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    ))
+                  }
+                </Grid>
+
+                <Typography variant="subtitle1" gutterBottom>
+                  Upcoming Special Dates
+                </Typography>
+                <Grid container spacing={1}>
+                  {availabilities
+                    .filter(a => !a.recurring && a.specificDate)
+                    .slice(0, 3)
+                    .map((availability) => (
+                      <Grid item xs={12} key={availability.id}>
+                        <Box sx={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          p: 1,
+                          borderBottom: '1px solid',
+                          borderColor: 'divider'
+                        }}>
+                          <Typography variant="body2">
+                            {availability.specificDate ? formatDate(availability.specificDate) : ''}
+                          </Typography>
+                          <Typography variant="body2">
+                            {formatTime(availability.startTime)} - {formatTime(availability.endTime)}
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    ))
+                  }
+                </Grid>
+              </Box>
             )}
             <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
               <Button
@@ -340,6 +480,12 @@ const ProviderDashboardPage: React.FC = () => {
       </Grid>
     </Container>
   );
+};
+
+// Helper function to get day name from day of week number
+const getDayName = (dayOfWeek: number): string => {
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  return days[dayOfWeek] || '';
 };
 
 export default ProviderDashboardPage;
