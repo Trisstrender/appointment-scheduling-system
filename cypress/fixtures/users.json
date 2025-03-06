@@ -1,23 +1,37 @@
 {
   "admin": {
-    "email": "admin@demo.com",
-    "password": "demo123",
+    "email": "admin@example.com",
+    "password": "password",
     "firstName": "Admin",
     "lastName": "User",
     "userType": "ADMIN"
   },
-  "provider": {
-    "email": "provider@demo.com",
-    "password": "demo123",
-    "firstName": "Provider",
-    "lastName": "User",
+  "provider1": {
+    "email": "provider1@example.com",
+    "password": "password",
+    "firstName": "John",
+    "lastName": "Provider",
     "userType": "PROVIDER"
   },
-  "client": {
-    "email": "client@demo.com",
-    "password": "demo123",
-    "firstName": "Client",
-    "lastName": "User",
+  "provider2": {
+    "email": "provider2@example.com",
+    "password": "password",
+    "firstName": "Jane",
+    "lastName": "Provider",
+    "userType": "PROVIDER"
+  },
+  "client1": {
+    "email": "client1@example.com",
+    "password": "password",
+    "firstName": "Alice",
+    "lastName": "Client",
+    "userType": "CLIENT"
+  },
+  "client2": {
+    "email": "client2@example.com",
+    "password": "password",
+    "firstName": "Bob",
+    "lastName": "Client",
     "userType": "CLIENT"
   },
   "newUser": {

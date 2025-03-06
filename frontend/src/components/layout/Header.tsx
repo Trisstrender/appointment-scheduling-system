@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import {
   AppBar,
@@ -17,12 +17,23 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import EventIcon from '@mui/icons-material/Event';
 import { useAuth } from '../../hooks/useAuth';
+import { NotificationBell } from '../common';
+import { useDispatch } from 'react-redux';
+import { loadDemoNotifications } from '../../store/slices/notificationSlice';
 
 const Header: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
+
+  // Load demo notifications when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(loadDemoNotifications());
+    }
+  }, [isAuthenticated, dispatch]);
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
@@ -166,10 +177,17 @@ const Header: React.FC = () => {
             ))}
           </Box>
 
+          {/* Notifications */}
+          {isAuthenticated && (
+            <Box sx={{ mr: 2 }}>
+              <NotificationBell />
+            </Box>
+          )}
+
           {/* User Menu */}
           <Box sx={{ flexGrow: 0 }}>
             <Tooltip title="Open settings">
-              <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+              <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }} aria-label="account of current user">
                 <Avatar alt={user?.firstName || 'User'} src="/static/images/avatar/2.jpg" />
               </IconButton>
             </Tooltip>
@@ -190,7 +208,7 @@ const Header: React.FC = () => {
               onClose={handleCloseUserMenu}
             >
               {userMenuItems.map((item) => (
-                <MenuItem key={item.title} onClick={item.onClick}>
+                <MenuItem key={item.title} onClick={item.onClick} data-testid={item.title === 'Logout' ? 'logout-button' : undefined}>
                   {item.path ? (
                     <Link component={RouterLink} to={item.path} color="inherit" underline="none">
                       <Typography textAlign="center">{item.title}</Typography>

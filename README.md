@@ -11,7 +11,7 @@ This application provides a full-featured appointment scheduling system with the
 - Provider availability management
 - Interactive calendar views
 - Admin dashboard for system management
-- Notifications for appointment confirmations and reminders
+- Real-time notifications for appointment confirmations and reminders
 
 ## Technology Stack
 
@@ -90,6 +90,56 @@ npm run cypress:run   # Headless mode
 ```bash
 docker-compose up -d
 ```
+
+## Features
+
+### Notification System
+
+The application includes a comprehensive notification system that keeps users informed about their appointments:
+
+- **Real-time Notifications**: Users receive notifications for appointment confirmations, cancellations, and reminders.
+- **Notification Bell**: A notification bell in the header displays the number of unread notifications.
+- **Notification Center**: Users can view all their notifications in a dedicated widget on their dashboard.
+- **Mark as Read**: Users can mark notifications as read individually or all at once.
+- **Notification Types**:
+  - Appointment Confirmations
+  - Appointment Cancellations
+  - Appointment Reminders
+  - New Appointment Requests (for providers)
+
+## Demo Accounts
+
+The application comes with pre-configured demo accounts for testing:
+
+| Role     | Email                 | Password  |
+|----------|----------------------|-----------|
+| Admin    | admin@example.com    | password  |
+| Provider | provider1@example.com | password  |
+| Provider | provider2@example.com | password  |
+| Client   | client1@example.com  | password  |
+| Client   | client2@example.com  | password  |
+
+### Demo Data
+
+The application is seeded with the following demo data:
+
+- **Providers**:
+  - John Provider: Senior Therapist offering massage services
+  - Jane Provider: Hair Stylist offering hair services
+
+- **Services**:
+  - Swedish Massage (60 min, $80)
+  - Deep Tissue Massage (60 min, $100)
+  - Hot Stone Massage (90 min, $120)
+  - Haircut (45 min, $50)
+  - Hair Coloring (120 min, $120)
+  - Hair Styling (60 min, $70)
+
+- **Availability**:
+  - John Provider: Monday to Friday, 9 AM to 5 PM
+  - Jane Provider: Tuesday to Saturday, 10 AM to 6 PM
+
+- **Sample Appointments**: Several appointments are pre-configured for demonstration purposes
 
 ## License
 

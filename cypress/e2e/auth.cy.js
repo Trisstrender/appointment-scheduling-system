@@ -49,7 +49,7 @@ describe('Authentication Flow', () => {
 
   it('should login as client successfully', () => {
     cy.fixture('users').then((users) => {
-      const { email, password } = users.client;
+      const { email, password } = users.client1;
       cy.login(email, password);
       cy.url().should('include', '/client/dashboard');
       cy.get('header').should('contain', 'Client Dashboard');
@@ -58,7 +58,7 @@ describe('Authentication Flow', () => {
 
   it('should login as provider successfully', () => {
     cy.fixture('users').then((users) => {
-      const { email, password } = users.provider;
+      const { email, password } = users.provider1;
       cy.login(email, password);
       cy.url().should('include', '/provider/dashboard');
       cy.get('header').should('contain', 'Provider Dashboard');
@@ -96,7 +96,7 @@ describe('Authentication Flow', () => {
 
   it('should logout successfully', () => {
     cy.fixture('users').then((users) => {
-      const { email, password } = users.client;
+      const { email, password } = users.client1;
       cy.login(email, password);
       cy.url().should('include', '/client/dashboard');
       

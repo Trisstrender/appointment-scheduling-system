@@ -4,7 +4,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { appointmentService, userService, serviceService } from '../../api';
 import { Appointment, User, Service } from '../../types';
-import { LoadingSpinner } from '../../components/common';
+import { LoadingSpinner, NotificationsWidget } from '../../components/common';
 import PeopleIcon from '@mui/icons-material/People';
 import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
 import EventIcon from '@mui/icons-material/Event';
@@ -218,63 +218,50 @@ const AdminDashboardPage: React.FC = () => {
         </Grid>
 
         {/* Quick Actions */}
-        <Grid item xs={12}>
-          <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column' }}>
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column', height: '100%' }}>
             <Typography variant="h6" gutterBottom>
               Quick Actions
             </Typography>
             <Divider sx={{ mb: 2 }} />
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6} md={3}>
-                <Button
-                  component={RouterLink}
-                  to="/admin/users/new"
-                  variant="contained"
-                  color="primary"
-                  fullWidth
-                  startIcon={<PersonIcon />}
-                >
-                  Add New User
-                </Button>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Button
-                  component={RouterLink}
-                  to="/admin/services/new"
-                  variant="contained"
-                  color="primary"
-                  fullWidth
-                  startIcon={<BusinessCenterIcon />}
-                >
-                  Add New Service
-                </Button>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Button
-                  component={RouterLink}
-                  to="/admin/appointments/pending"
-                  variant="contained"
-                  color="primary"
-                  fullWidth
-                  startIcon={<EventIcon />}
-                >
-                  Review Pending Appointments
-                </Button>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Button
-                  component={RouterLink}
-                  to="/admin/reports"
-                  variant="contained"
-                  color="primary"
-                  fullWidth
-                  startIcon={<EventIcon />}
-                >
-                  Generate Reports
-                </Button>
-              </Grid>
-            </Grid>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Button
+                component={RouterLink}
+                to="/admin/users"
+                variant="contained"
+                color="primary"
+                fullWidth
+                data-testid="manage-users-button"
+              >
+                Manage Users
+              </Button>
+              <Button
+                component={RouterLink}
+                to="/admin/services"
+                variant="outlined"
+                color="primary"
+                fullWidth
+                data-testid="manage-services-button"
+              >
+                Manage Services
+              </Button>
+              <Button
+                component={RouterLink}
+                to="/admin/appointments"
+                variant="outlined"
+                color="primary"
+                fullWidth
+                data-testid="manage-appointments-button"
+              >
+                Manage Appointments
+              </Button>
+            </Box>
           </Paper>
+        </Grid>
+
+        {/* Notifications */}
+        <Grid item xs={12} md={4}>
+          <NotificationsWidget maxItems={5} />
         </Grid>
 
         {/* Recent Appointments */}

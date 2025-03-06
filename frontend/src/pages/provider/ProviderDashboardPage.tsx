@@ -21,7 +21,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import { useAuth } from '../../hooks/useAuth';
 import { appointmentService, serviceService, availabilityService } from '../../api';
 import { Appointment, Service, Availability } from '../../types';
-import { LoadingSpinner } from '../../components/common';
+import { LoadingSpinner, NotificationsWidget } from '../../components/common';
 
 const ProviderDashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -181,49 +181,44 @@ const ProviderDashboardPage: React.FC = () => {
               Quick Actions
             </Typography>
             <Divider sx={{ mb: 2 }} />
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, flexGrow: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Button
                 component={RouterLink}
                 to="/provider/appointments"
                 variant="contained"
                 color="primary"
                 fullWidth
-                startIcon={<EventIcon />}
+                data-testid="view-appointments-button"
               >
-                Manage Appointments
+                View Appointments
               </Button>
               <Button
                 component={RouterLink}
                 to="/provider/services"
-                variant="contained"
-                color="secondary"
+                variant="outlined"
+                color="primary"
                 fullWidth
-                startIcon={<BusinessCenterIcon />}
+                data-testid="manage-services-button"
               >
                 Manage Services
               </Button>
               <Button
                 component={RouterLink}
                 to="/provider/availability"
-                variant="contained"
-                color="info"
-                fullWidth
-                startIcon={<AccessTimeIcon />}
-              >
-                Manage Availability
-              </Button>
-              <Button
-                component={RouterLink}
-                to="/provider/profile"
                 variant="outlined"
                 color="primary"
                 fullWidth
-                startIcon={<PersonIcon />}
+                data-testid="manage-availability-button"
               >
-                Edit Profile
+                Manage Availability
               </Button>
             </Box>
           </Paper>
+        </Grid>
+
+        {/* Notifications */}
+        <Grid item xs={12} md={4}>
+          <NotificationsWidget maxItems={5} />
         </Grid>
 
         {/* Today's Appointments */}

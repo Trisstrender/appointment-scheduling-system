@@ -4,7 +4,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { appointmentService } from '../../api';
 import { Appointment } from '../../types';
-import { LoadingSpinner } from '../../components/common';
+import { LoadingSpinner, NotificationsWidget } from '../../components/common';
 
 const ClientDashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -80,6 +80,7 @@ const ClientDashboardPage: React.FC = () => {
                 variant="contained"
                 color="primary"
                 fullWidth
+                data-testid="book-appointment-button"
               >
                 Book New Appointment
               </Button>
@@ -89,6 +90,7 @@ const ClientDashboardPage: React.FC = () => {
                 variant="outlined"
                 color="primary"
                 fullWidth
+                data-testid="view-appointments-button"
               >
                 View All Appointments
               </Button>
@@ -98,6 +100,7 @@ const ClientDashboardPage: React.FC = () => {
                 variant="outlined"
                 color="primary"
                 fullWidth
+                data-testid="view-profile-button"
               >
                 Edit Profile
               </Button>
@@ -117,58 +120,62 @@ const ClientDashboardPage: React.FC = () => {
                 {error}
               </Typography>
             )}
-            {upcomingAppointments.length === 0 ? (
-              <Typography variant="body1" color="text.secondary">
-                You don't have any upcoming appointments.{' '}
-                <RouterLink to="/services">Book one now!</RouterLink>
-              </Typography>
-            ) : (
-              upcomingAppointments.map((appointment) => (
-                <Box
-                  key={appointment.id}
-                  sx={{
-                    mb: 2,
-                    p: 2,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: 1,
-                  }}
-                >
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={8}>
-                      <Typography variant="h6">{appointment.serviceName}</Typography>
-                      <Typography variant="body1">with {appointment.providerName}</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {formatDateTime(appointment.startTime)} - {formatDateTime(appointment.endTime)}
-                      </Typography>
-                      {appointment.notes && (
-                        <Typography variant="body2" sx={{ mt: 1 }}>
-                          Notes: {appointment.notes}
+            <Box className="upcoming-appointments">
+              {upcomingAppointments.length === 0 ? (
+                <Typography variant="body1" color="text.secondary">
+                  You don't have any upcoming appointments.{' '}
+                  <RouterLink to="/services">Book one now!</RouterLink>
+                </Typography>
+              ) : (
+                upcomingAppointments.map((appointment) => (
+                  <Box
+                    key={appointment.id}
+                    sx={{
+                      mb: 2,
+                      p: 2,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                    }}
+                    className="appointment-card"
+                  >
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={8}>
+                        <Typography variant="h6">{appointment.serviceName}</Typography>
+                        <Typography variant="body1">with {appointment.providerName}</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {formatDateTime(appointment.startTime)} - {formatDateTime(appointment.endTime)}
                         </Typography>
-                      )}
+                        {appointment.notes && (
+                          <Typography variant="body2" sx={{ mt: 1 }}>
+                            Notes: {appointment.notes}
+                          </Typography>
+                        )}
+                      </Grid>
+                      <Grid item xs={12} sm={4} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                        <Button
+                          component={RouterLink}
+                          to={`/client/appointments/${appointment.id}`}
+                          variant="outlined"
+                          size="small"
+                          sx={{ mr: 1 }}
+                        >
+                          Details
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          size="small"
+                          className="cancel-button"
+                        >
+                          Cancel
+                        </Button>
+                      </Grid>
                     </Grid>
-                    <Grid item xs={12} sm={4} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                      <Button
-                        component={RouterLink}
-                        to={`/client/appointments/${appointment.id}`}
-                        variant="outlined"
-                        size="small"
-                        sx={{ mr: 1 }}
-                      >
-                        Details
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        color="error"
-                        size="small"
-                      >
-                        Cancel
-                      </Button>
-                    </Grid>
-                  </Grid>
-                </Box>
-              ))
-            )}
+                  </Box>
+                ))
+              )}
+            </Box>
             {upcomingAppointments.length > 0 && (
               <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
                 <Button
@@ -184,8 +191,13 @@ const ClientDashboardPage: React.FC = () => {
           </Paper>
         </Grid>
 
+        {/* Notifications */}
+        <Grid item xs={12} md={4}>
+          <NotificationsWidget maxItems={5} />
+        </Grid>
+
         {/* Past Appointments */}
-        <Grid item xs={12}>
+        <Grid item xs={12} md={8}>
           <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column' }}>
             <Typography variant="h6" gutterBottom>
               Recent Appointments
@@ -207,6 +219,7 @@ const ClientDashboardPage: React.FC = () => {
                         borderRadius: 1,
                         height: '100%',
                       }}
+                      className="appointment-card"
                     >
                       <Typography variant="h6">{appointment.serviceName}</Typography>
                       <Typography variant="body2">with {appointment.providerName}</Typography>
@@ -214,7 +227,7 @@ const ClientDashboardPage: React.FC = () => {
                         {formatDateTime(appointment.startTime)}
                       </Typography>
                       <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="body2" color="text.secondary" className="appointment-status">
                           Status: {appointment.status}
                         </Typography>
                         <Button
