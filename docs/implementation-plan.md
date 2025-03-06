@@ -271,3 +271,12 @@ An appointment scheduling service remains ideal because:
    - User role descriptions
    - Feature showcase
    - Implementation highlights
+
+## Documentation
+
+- [Implementation Plan](implementation-plan.md)
+- [Implementation Steps](implementation-steps.md)
+- [Notification System](notification-system.md)
+- [Testing Strategy](testing-strategy.md)
+- [Deployment Guide](deployment-guide.md)
+- [User Guide](user-guide.md)

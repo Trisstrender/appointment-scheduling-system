@@ -1,88 +1,102 @@
-# End-to-End Testing with Cypress
+# Cypress End-to-End Tests
 
 This directory contains end-to-end tests for the Appointment Scheduling System using Cypress.
 
 ## Test Structure
 
-The tests are organized by feature:
+The tests are organized by feature and user journey:
 
-- `auth.cy.js` - Authentication functionality (login, register, logout)
-- `services.cy.js` - Service management and booking
-- `appointments.cy.js` - Appointment creation, viewing, and management
-- `availability.cy.js` - Provider availability management
-- `profile.cy.js` - User profile management
-- `dashboard.cy.js` - Dashboard functionality for all user types
+- `auth.cy.js`: Authentication tests (login, registration, logout)
+- `appointments.cy.js`: Appointment management tests
+- `services.cy.js`: Service management tests
+- `availability.cy.js`: Availability management tests
+- `dashboard.cy.js`: Dashboard functionality tests
+- `profile.cy.js`: Profile management tests
+- `notifications.cy.js`: Notification system tests
+- `user-journey.cy.js`: Complete user journey tests
+- `performance.cy.js`: Performance tests
+- `security.cy.js`: Security tests
 
 ## Running Tests
 
 ### Prerequisites
 
-- Node.js (v14 or higher)
-- npm (v6 or higher)
-- The application should be running locally (both frontend and backend)
+- Node.js 16 or higher
+- npm 8 or higher
+- Running backend and frontend applications
 
-### Commands
-
-You can run the tests using the following npm scripts:
+### Running Tests Locally
 
 ```bash
-# Open Cypress Test Runner (interactive mode)
+# Install dependencies
+npm install
+
+# Open Cypress Test Runner
 npm run cypress:open
 
-# Run all tests headlessly
+# Run tests in headless mode
 npm run cypress:run
 
-# Run specific test suites
-npm run cypress:auth
-npm run cypress:services
-npm run cypress:appointments
-npm run cypress:availability
-npm run cypress:profile
-npm run cypress:dashboard
-
-# Run tests in CI environment (headless)
-npm run test:e2e:ci
+# Run specific test file
+npm run cypress:run -- --spec "cypress/e2e/auth.cy.js"
 ```
 
-## Test Data
+### Running Tests in CI/CD
 
-Test data is stored in the `fixtures` directory:
-
-- `users.json` - Contains test user credentials for different roles
+The tests are automatically run in the CI/CD pipeline using GitHub Actions. See the workflow configuration in `.github/workflows/ci.yml`.
 
 ## Custom Commands
 
-Custom Cypress commands are defined in `support/commands.js`:
+The tests use custom commands defined in `cypress/support/commands.js`:
 
-- `login(email, password)` - Logs in a user with the given credentials
-- `register(firstName, lastName, email, password, userType)` - Registers a new user
-- `isVisible(selector)` - Checks if an element is visible
+- `cy.login(email, password)`: Login with the specified credentials
+- `cy.register(firstName, lastName, email, password, userType)`: Register a new user
+- `cy.isVisible(selector)`: Check if an element is visible
+- `cy.openNotificationDropdown()`: Open the notification dropdown
+- `cy.getUnreadNotificationCount()`: Get the number of unread notifications
+- `cy.markNotificationAsRead(index)`: Mark a notification as read
+- `cy.markAllNotificationsAsRead()`: Mark all notifications as read
+- `cy.checkNotificationsWidget()`: Check if the notifications widget is displayed
 
-## Configuration
+## Test Data
 
-Cypress configuration is defined in `cypress.config.js`. Key settings include:
+The tests use test data defined in `cypress/fixtures`:
 
-- Base URL: `http://localhost:3000`
-- Viewport size: 1280x720
-- Default timeout: 10000ms
+- `users.json`: User credentials for different roles
+- `services.json`: Service data for testing
+- `appointments.json`: Appointment data for testing
 
 ## Best Practices
 
-1. **Isolation**: Each test should be independent and not rely on the state from previous tests.
-2. **Selectors**: Use data-testid attributes for selecting elements to make tests more resilient to UI changes.
-3. **Fixtures**: Use fixtures for test data instead of hardcoding values in tests.
-4. **Custom Commands**: Create custom commands for common operations to keep tests DRY.
-5. **Assertions**: Make specific assertions about the expected state of the application.
+1. **Keep tests independent**: Each test should be able to run independently of others
+2. **Use custom commands**: Extract common functionality into custom commands
+3. **Use fixtures**: Store test data in fixtures
+4. **Use data-testid attributes**: Use data-testid attributes for selecting elements
+5. **Avoid flaky tests**: Make tests resilient to timing issues and network delays
+6. **Test real user flows**: Tests should simulate real user interactions
 
 ## Troubleshooting
 
-If tests are failing, check the following:
+### Common Issues
 
-1. Ensure the application is running locally (frontend and backend)
-2. Verify the test data in fixtures matches the expected format
-3. Check for any changes in the UI that might affect selectors
-4. Look at the Cypress screenshots and videos for visual clues
+1. **Tests fail due to timing issues**:
+   - Use `cy.wait()` to wait for specific elements or network requests
+   - Increase the default timeout in `cypress.config.js`
 
-## CI/CD Integration
+2. **Tests fail due to missing elements**:
+   - Check if the element exists in the DOM
+   - Check if the element is visible
+   - Check if the element has the correct selector
 
-These tests are integrated into the CI/CD pipeline and run automatically on pull requests and merges to the main branch.
+3. **Tests fail due to network errors**:
+   - Check if the backend is running
+   - Check if the frontend is running
+   - Check if the API endpoints are accessible
+
+### Getting Help
+
+If you encounter any issues with the tests:
+
+1. Check the Cypress documentation: https://docs.cypress.io
+2. Check the test logs in the Cypress Test Runner
+3. Contact the development team

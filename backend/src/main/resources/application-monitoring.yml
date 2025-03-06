@@ -1,0 +1,51 @@
+spring:
+  profiles: monitoring
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,loggers,env,mappings
+      base-path: /api/actuator
+  endpoint:
+    health:
+      show-details: always
+    info:
+      enabled: true
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: true
+    os:
+      enabled: true
+    git:
+      enabled: true
+
+# Info Configuration
+info:
+  application:
+    name: Appointment Scheduling System
+    description: A comprehensive appointment scheduling service
+    version: 1.0.0
+  contact:
+    name: Development Team
+    email: dev@appointment-system.example.com
+  links:
+    documentation: https://appointment-system.example.com/docs
+    repository: https://github.com/yourusername/appointment-scheduling-system
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    VoidSystems.appointment_service: DEBUG
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.hibernate: INFO
+  file:
+    name: logs/application.log
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n" 

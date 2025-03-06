@@ -40,3 +40,39 @@ Cypress.Commands.add('register', (firstName, lastName, email, password, userType
 Cypress.Commands.add('isVisible', (selector) => {
   cy.get(selector).should('be.visible');
 });
+
+// Custom command to open notification dropdown
+Cypress.Commands.add('openNotificationDropdown', () => {
+  cy.get('[data-testid="notifications-icon"]').click();
+  cy.get('[data-testid="notifications-dropdown"]').should('be.visible');
+});
+
+// Custom command to get unread notification count
+Cypress.Commands.add('getUnreadNotificationCount', () => {
+  return cy.get('.MuiBadge-badge').then(($badge) => {
+    if ($badge.length === 0) {
+      return 0;
+    }
+    return parseInt($badge.text()) || 0;
+  });
+});
+
+// Custom command to mark a notification as read
+Cypress.Commands.add('markNotificationAsRead', (index = 0) => {
+  cy.openNotificationDropdown();
+  cy.get('[data-testid="notification-item"]').not('.read').eq(index).click();
+});
+
+// Custom command to mark all notifications as read
+Cypress.Commands.add('markAllNotificationsAsRead', () => {
+  cy.openNotificationDropdown();
+  cy.contains('Clear All').click();
+});
+
+// Custom command to check notifications widget
+Cypress.Commands.add('checkNotificationsWidget', () => {
+  cy.get('[data-testid="notifications-widget"]').should('be.visible');
+  cy.get('[data-testid="notifications-widget"]').within(() => {
+    cy.contains('Notifications').should('be.visible');
+  });
+});

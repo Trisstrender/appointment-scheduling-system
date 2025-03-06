@@ -45,6 +45,11 @@ This application provides a full-featured appointment scheduling system with the
 For detailed information about the implementation plan, technical components, and deployment strategy, please refer to:
 
 - [Implementation Plan](docs/implementation-plan.md)
+- [Implementation Steps](docs/implementation-steps.md)
+- [Notification System](docs/notification-system.md)
+- [Testing Strategy](docs/testing-strategy.md)
+- [Deployment Guide](docs/deployment-guide.md)
+- [User Guide](docs/user-guide.md)
 - [Cypress E2E Tests](cypress/README.md)
 
 ## Getting Started
