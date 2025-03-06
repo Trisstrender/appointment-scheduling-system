@@ -3,10 +3,14 @@ package VoidSystems.appointment_service.integration;
 import VoidSystems.appointment_service.dto.ServiceDTO;
 import VoidSystems.appointment_service.dto.auth.AuthRequest;
 import VoidSystems.appointment_service.dto.auth.AuthResponse;
-import VoidSystems.appointment_service.model.Service;
-import VoidSystems.appointment_service.model.User;
-import VoidSystems.appointment_service.repository.ServiceRepository;
-import VoidSystems.appointment_service.repository.UserRepository;
+import VoidSystems.appointment_service.domain.model.Service;
+import VoidSystems.appointment_service.domain.model.Provider;
+import VoidSystems.appointment_service.domain.model.User;
+import VoidSystems.appointment_service.domain.model.Role;
+import VoidSystems.appointment_service.domain.repository.ServiceRepository;
+import VoidSystems.appointment_service.domain.repository.UserRepository;
+import VoidSystems.appointment_service.domain.repository.ProviderRepository;
+import VoidSystems.appointment_service.domain.repository.RoleRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -45,6 +50,12 @@ public class ServiceControllerIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ProviderRepository providerRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -87,25 +98,36 @@ public class ServiceControllerIntegrationTest {
         userRepository.deleteAll();
     }
 
-    private User createTestUser(String email, String firstName, String lastName, String role, String userType) {
+    private User createTestUser(String email, String firstName, String lastName, String roleName, String userType) {
         User user = new User();
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode("password"));
         user.setFirstName(firstName);
         user.setLastName(lastName);
+        
+        // Find or create the role
+        Role role = roleRepository.findByName(roleName)
+                .orElseGet(() -> {
+                    Role newRole = new Role();
+                    newRole.setName(roleName);
+                    return roleRepository.save(newRole);
+                });
+        
         user.setRole(role);
-        user.setUserType(userType);
-        user.setActive(true);
+        
         return userRepository.save(user);
     }
 
     private Service createTestService(String name, String description, int durationMinutes, double price, Long providerId) {
+        Provider provider = providerRepository.findById(providerId)
+            .orElseThrow(() -> new RuntimeException("Provider not found"));
+        
         Service service = new Service();
         service.setName(name);
         service.setDescription(description);
         service.setDurationMinutes(durationMinutes);
-        service.setPrice(price);
-        service.setProviderId(providerId);
+        service.setPrice(new java.math.BigDecimal(price));
+        service.setProvider(provider);
         service.setActive(true);
         return serviceRepository.save(service);
     }
@@ -150,8 +172,8 @@ public class ServiceControllerIntegrationTest {
                 .andExpect(jsonPath("$.data.name").value(testService.getName()))
                 .andExpect(jsonPath("$.data.description").value(testService.getDescription()))
                 .andExpect(jsonPath("$.data.durationMinutes").value(testService.getDurationMinutes()))
-                .andExpect(jsonPath("$.data.price").value(testService.getPrice()))
-                .andExpect(jsonPath("$.data.providerId").value(testService.getProviderId()));
+                .andExpect(jsonPath("$.data.price").value(testService.getPrice().doubleValue()))
+                .andExpect(jsonPath("$.data.providerId").value(testService.getProvider().getId()));
     }
 
     @Test
@@ -236,7 +258,7 @@ public class ServiceControllerIntegrationTest {
         assertEquals("Updated Service", updatedService.getName());
         assertEquals("This service has been updated", updatedService.getDescription());
         assertEquals(45, updatedService.getDurationMinutes());
-        assertEquals(79.99, updatedService.getPrice());
+        assertEquals(79.99, updatedService.getPrice().doubleValue());
     }
 
     @Test
@@ -257,7 +279,7 @@ public class ServiceControllerIntegrationTest {
         // Verify the service was updated in the database
         Service updatedService = serviceRepository.findById(testService.getId()).orElseThrow();
         assertEquals("Admin Updated", updatedService.getName());
-        assertEquals(199.99, updatedService.getPrice());
+        assertEquals(199.99, updatedService.getPrice().doubleValue());
     }
 
     @Test
@@ -304,7 +326,7 @@ public class ServiceControllerIntegrationTest {
 
         // Verify the service was activated
         Service activatedService = serviceRepository.findById(testService.getId()).orElseThrow();
-        assertTrue(activatedService.isActive());
+        assertThat(activatedService.getActive()).isTrue();
     }
 
     @Test
@@ -316,6 +338,6 @@ public class ServiceControllerIntegrationTest {
 
         // Verify the service was deactivated
         Service deactivatedService = serviceRepository.findById(testService.getId()).orElseThrow();
-        assertTrue(!deactivatedService.isActive());
+        assertThat(deactivatedService.getActive()).isFalse();
     }
 }

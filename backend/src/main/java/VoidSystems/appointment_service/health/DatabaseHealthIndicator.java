@@ -22,9 +22,9 @@ public class DatabaseHealthIndicator implements HealthIndicator {
     public Health health() {
         try {
             // Execute a simple query to check if the database is up
-            int result = jdbcTemplate.queryForObject("SELECT 1", Integer.class);
+            Integer result = jdbcTemplate.queryForObject("SELECT 1", Integer.class);
             
-            if (result == 1) {
+            if (result != null && result == 1) {
                 return Health.up()
                         .withDetail("database", "MySQL/MariaDB")
                         .withDetail("status", "Available")

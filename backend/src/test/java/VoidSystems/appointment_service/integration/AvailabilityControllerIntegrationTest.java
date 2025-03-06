@@ -3,10 +3,12 @@ package VoidSystems.appointment_service.integration;
 import VoidSystems.appointment_service.dto.AvailabilityDTO;
 import VoidSystems.appointment_service.dto.auth.AuthRequest;
 import VoidSystems.appointment_service.dto.auth.AuthResponse;
+import VoidSystems.appointment_service.domain.model.User;
+import VoidSystems.appointment_service.domain.model.Role;
 import VoidSystems.appointment_service.model.Availability;
-import VoidSystems.appointment_service.model.User;
 import VoidSystems.appointment_service.repository.AvailabilityRepository;
-import VoidSystems.appointment_service.repository.UserRepository;
+import VoidSystems.appointment_service.domain.repository.UserRepository;
+import VoidSystems.appointment_service.domain.repository.RoleRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,6 +51,9 @@ public class AvailabilityControllerIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -110,15 +115,23 @@ public class AvailabilityControllerIntegrationTest {
         userRepository.deleteAll();
     }
 
-    private User createTestUser(String email, String firstName, String lastName, String role, String userType) {
+    private User createTestUser(String email, String firstName, String lastName, String roleName, String userType) {
         User user = new User();
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode("password"));
         user.setFirstName(firstName);
         user.setLastName(lastName);
+        
+        // Find or create the role
+        Role role = roleRepository.findByName(roleName)
+                .orElseGet(() -> {
+                    Role newRole = new Role();
+                    newRole.setName(roleName);
+                    return roleRepository.save(newRole);
+                });
+        
         user.setRole(role);
-        user.setUserType(userType);
-        user.setActive(true);
+        
         return userRepository.save(user);
     }
 

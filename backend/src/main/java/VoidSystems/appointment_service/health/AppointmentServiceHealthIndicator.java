@@ -4,9 +4,9 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-import VoidSystems.appointment_service.repository.AppointmentRepository;
-import VoidSystems.appointment_service.repository.ServiceRepository;
-import VoidSystems.appointment_service.repository.UserRepository;
+import VoidSystems.appointment_service.domain.repository.AppointmentRepository;
+import VoidSystems.appointment_service.domain.repository.ServiceRepository;
+import VoidSystems.appointment_service.domain.repository.UserRepository;
 
 /**
  * Custom health indicator for the appointment service.

@@ -4,11 +4,15 @@ import VoidSystems.appointment_service.dto.AppointmentDTO;
 import VoidSystems.appointment_service.dto.auth.AuthRequest;
 import VoidSystems.appointment_service.dto.auth.AuthResponse;
 import VoidSystems.appointment_service.model.Appointment;
-import VoidSystems.appointment_service.model.Service;
-import VoidSystems.appointment_service.model.User;
+import VoidSystems.appointment_service.domain.model.Service;
+import VoidSystems.appointment_service.domain.model.Provider;
+import VoidSystems.appointment_service.domain.model.User;
+import VoidSystems.appointment_service.domain.model.Role;
 import VoidSystems.appointment_service.repository.AppointmentRepository;
-import VoidSystems.appointment_service.repository.ServiceRepository;
-import VoidSystems.appointment_service.repository.UserRepository;
+import VoidSystems.appointment_service.domain.repository.ServiceRepository;
+import VoidSystems.appointment_service.domain.repository.ProviderRepository;
+import VoidSystems.appointment_service.domain.repository.UserRepository;
+import VoidSystems.appointment_service.domain.repository.RoleRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,7 +54,13 @@ public class AppointmentControllerIntegrationTest {
     private ServiceRepository serviceRepository;
 
     @Autowired
+    private ProviderRepository providerRepository;
+
+    @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -101,25 +111,36 @@ public class AppointmentControllerIntegrationTest {
         userRepository.deleteAll();
     }
 
-    private User createTestUser(String email, String firstName, String lastName, String role, String userType) {
+    private User createTestUser(String email, String firstName, String lastName, String roleName, String userType) {
         User user = new User();
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode("password"));
         user.setFirstName(firstName);
         user.setLastName(lastName);
+        
+        // Find or create the role
+        Role role = roleRepository.findByName(roleName)
+                .orElseGet(() -> {
+                    Role newRole = new Role();
+                    newRole.setName(roleName);
+                    return roleRepository.save(newRole);
+                });
+        
         user.setRole(role);
-        user.setUserType(userType);
-        user.setActive(true);
+        
         return userRepository.save(user);
     }
 
     private Service createTestService(String name, String description, int durationMinutes, double price, Long providerId) {
+        Provider provider = providerRepository.findById(providerId)
+            .orElseThrow(() -> new RuntimeException("Provider not found"));
+        
         Service service = new Service();
         service.setName(name);
         service.setDescription(description);
         service.setDurationMinutes(durationMinutes);
-        service.setPrice(price);
-        service.setProviderId(providerId);
+        service.setPrice(new java.math.BigDecimal(price));
+        service.setProvider(provider);
         service.setActive(true);
         return serviceRepository.save(service);
     }

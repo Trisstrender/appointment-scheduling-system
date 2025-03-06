@@ -23,6 +23,9 @@ const notificationSlice = createSlice({
   name: 'notifications',
   initialState,
   reducers: {
+    setNotifications: (state, action: PayloadAction<Notification[]>) => {
+      state.notifications = action.payload;
+    },
     addNotification: (state, action: PayloadAction<Omit<Notification, 'id' | 'read' | 'createdAt'>>) => {
       state.notifications.unshift({
         id: uuidv4(),
@@ -100,6 +103,7 @@ const notificationSlice = createSlice({
 });
 
 export const { 
+  setNotifications,
   addNotification, 
   markAsRead, 
   markAllAsRead, 

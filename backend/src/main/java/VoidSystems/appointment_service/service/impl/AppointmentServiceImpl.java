@@ -3,6 +3,7 @@ package VoidSystems.appointment_service.service.impl;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +30,7 @@ import VoidSystems.appointment_service.exception.ResourceNotFoundException;
 import VoidSystems.appointment_service.mapper.AppointmentMapper;
 import VoidSystems.appointment_service.service.AppointmentService;
 import VoidSystems.appointment_service.service.AvailabilityService;
+import VoidSystems.appointment_service.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -43,6 +45,9 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final UserRepository userRepository;
     private final AppointmentMapper appointmentMapper;
     private final AvailabilityService availabilityService;
+    private final NotificationService notificationService;
+    
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy 'at' h:mm a");
 
     @Override
     public List<AppointmentDTO> getAllAppointments() {
@@ -201,6 +206,18 @@ public class AppointmentServiceImpl implements AppointmentService {
         
         Appointment savedAppointment = appointmentRepository.save(appointment);
         
+        // Create notifications
+        String formattedDateTime = startTime.format(DATE_TIME_FORMATTER);
+        
+        // Notify the provider about the new appointment
+        notificationService.createNewAppointmentNotification(
+            provider, 
+            savedAppointment.getId(), 
+            client.getFirstName() + " " + client.getLastName(),
+            service.getName(),
+            formattedDateTime
+        );
+        
         return appointmentMapper.toDTO(savedAppointment);
     }
 
@@ -294,6 +311,35 @@ public class AppointmentServiceImpl implements AppointmentService {
         
         appointment.setStatus(newStatus);
         Appointment updatedAppointment = appointmentRepository.save(appointment);
+        
+        // Create notifications based on status change
+        String formattedDateTime = appointment.getStartTime().format(DATE_TIME_FORMATTER);
+        String serviceName = appointment.getService().getName();
+        
+        if ("CONFIRMED".equals(status) && !"CONFIRMED".equals(currentStatus)) {
+            // Notify the client that their appointment has been confirmed
+            notificationService.createAppointmentConfirmationNotification(
+                appointment.getClient(),
+                appointment.getId(),
+                serviceName,
+                formattedDateTime
+            );
+        } else if ("CANCELLED".equals(status) && !"CANCELLED".equals(currentStatus)) {
+            // Notify both client and provider about cancellation
+            notificationService.createAppointmentCancellationNotification(
+                appointment.getClient(),
+                appointment.getId(),
+                serviceName,
+                formattedDateTime
+            );
+            
+            notificationService.createAppointmentCancellationNotification(
+                appointment.getProvider(),
+                appointment.getId(),
+                serviceName,
+                formattedDateTime
+            );
+        }
         
         return appointmentMapper.toDTO(updatedAppointment);
     }

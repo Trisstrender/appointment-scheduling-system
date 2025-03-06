@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Box,
   Card,
@@ -12,6 +12,7 @@ import {
   Button,
   CardHeader,
   IconButton,
+  CircularProgress
 } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -19,30 +20,44 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import EventIcon from '@mui/icons-material/Event';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../../store';
-import { markAsRead, markAllAsRead } from '../../store/slices/notificationSlice';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { useNotifications } from '../../hooks/useNotifications';
 
 interface NotificationsWidgetProps {
   maxItems?: number;
 }
 
 const NotificationsWidget: React.FC<NotificationsWidgetProps> = ({ maxItems = 5 }) => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { notifications } = useSelector((state: RootState) => state.notifications);
+  const { 
+    notifications, 
+    loading, 
+    error, 
+    fetchNotifications, 
+    markNotificationAsRead, 
+    markAllNotificationsAsRead 
+  } = useNotifications();
+  
+  // Fetch notifications when component mounts
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
   
   const displayedNotifications = notifications.slice(0, maxItems);
   const hasMoreNotifications = notifications.length > maxItems;
   
   const handleMarkAsRead = (id: string) => {
-    dispatch(markAsRead(id));
+    markNotificationAsRead(id);
   };
 
   const handleMarkAllAsRead = () => {
-    dispatch(markAllAsRead());
+    markAllNotificationsAsRead();
+  };
+
+  const handleRefresh = () => {
+    fetchNotifications();
   };
 
   const handleViewAll = () => {
@@ -81,14 +96,29 @@ const NotificationsWidget: React.FC<NotificationsWidgetProps> = ({ maxItems = 5 
       <CardHeader
         title="Notifications"
         action={
-          <IconButton aria-label="settings">
-            <MoreHorizIcon />
-          </IconButton>
+          <Box>
+            <IconButton aria-label="refresh" onClick={handleRefresh} size="small" sx={{ mr: 1 }}>
+              <RefreshIcon />
+            </IconButton>
+            <IconButton aria-label="settings" size="small">
+              <MoreHorizIcon />
+            </IconButton>
+          </Box>
         }
       />
       <Divider />
       <CardContent sx={{ p: 0 }}>
-        {displayedNotifications.length === 0 ? (
+        {loading ? (
+          <Box sx={{ p: 4, display: 'flex', justifyContent: 'center' }}>
+            <CircularProgress size={24} />
+          </Box>
+        ) : error ? (
+          <Box sx={{ p: 2, textAlign: 'center' }}>
+            <Typography variant="body2" color="error">
+              {error}
+            </Typography>
+          </Box>
+        ) : displayedNotifications.length === 0 ? (
           <Box sx={{ p: 2, textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary">
               No notifications

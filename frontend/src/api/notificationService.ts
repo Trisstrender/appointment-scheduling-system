@@ -1,23 +1,21 @@
 import axios from './axiosConfig';
-import { Notification } from '../store/slices/notificationSlice';
 
-interface GetNotificationsResponse {
-  notifications: Notification[];
-  totalCount: number;
-}
-
-interface NotificationResponse {
-  success: boolean;
+export interface NotificationDTO {
+  id: number;
+  type: string;
+  title: string;
   message: string;
-  notification?: Notification;
+  read: boolean;
+  createdAt: string;
+  data?: Record<string, any>;
 }
 
 /**
  * Get all notifications for the current user
  */
-export const getNotifications = async (page = 0, size = 10): Promise<GetNotificationsResponse> => {
+export const getNotifications = async (): Promise<NotificationDTO[]> => {
   try {
-    const response = await axios.get(`/notifications?page=${page}&size=${size}`);
+    const response = await axios.get('/api/notifications');
     return response.data;
   } catch (error) {
     console.error('Error fetching notifications:', error);
@@ -26,11 +24,58 @@ export const getNotifications = async (page = 0, size = 10): Promise<GetNotifica
 };
 
 /**
- * Mark a notification as read
+ * Get paginated notifications for the current user
  */
-export const markNotificationAsRead = async (notificationId: string): Promise<NotificationResponse> => {
+export const getPaginatedNotifications = async (page = 0, size = 10): Promise<{
+  content: NotificationDTO[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}> => {
   try {
-    const response = await axios.patch(`/notifications/${notificationId}/read`);
+    const response = await axios.get(`/api/notifications/paginated?page=${page}&size=${size}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching paginated notifications:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get unread notifications for the current user
+ */
+export const getUnreadNotifications = async (): Promise<NotificationDTO[]> => {
+  try {
+    const response = await axios.get('/api/notifications/unread');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching unread notifications:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get the count of unread notifications for the current user
+ */
+export const getUnreadNotificationCount = async (): Promise<number> => {
+  try {
+    const response = await axios.get('/api/notifications/unread/count');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching unread notification count:', error);
+    throw error;
+  }
+};
+
+/**
+ * Mark a notification as read
+ * @param notificationId The ID of the notification to mark as read
+ * @returns The updated notification
+ */
+export const markNotificationAsRead = async (notificationId: string): Promise<NotificationDTO> => {
+  try {
+    const response = await axios.put(`/api/notifications/${notificationId}/read`);
     return response.data;
   } catch (error) {
     console.error('Error marking notification as read:', error);
@@ -39,12 +84,11 @@ export const markNotificationAsRead = async (notificationId: string): Promise<No
 };
 
 /**
- * Mark all notifications as read
+ * Mark all notifications as read for the current user
  */
-export const markAllNotificationsAsRead = async (): Promise<{ success: boolean; message: string }> => {
+export const markAllNotificationsAsRead = async (): Promise<void> => {
   try {
-    const response = await axios.patch('/notifications/read-all');
-    return response.data;
+    await axios.put('/api/notifications/read-all');
   } catch (error) {
     console.error('Error marking all notifications as read:', error);
     throw error;
@@ -54,10 +98,9 @@ export const markAllNotificationsAsRead = async (): Promise<{ success: boolean; 
 /**
  * Delete a notification
  */
-export const deleteNotification = async (notificationId: string): Promise<{ success: boolean; message: string }> => {
+export const deleteNotification = async (notificationId: number): Promise<void> => {
   try {
-    const response = await axios.delete(`/notifications/${notificationId}`);
-    return response.data;
+    await axios.delete(`/api/notifications/${notificationId}`);
   } catch (error) {
     console.error('Error deleting notification:', error);
     throw error;
@@ -67,10 +110,9 @@ export const deleteNotification = async (notificationId: string): Promise<{ succ
 /**
  * Delete all notifications
  */
-export const deleteAllNotifications = async (): Promise<{ success: boolean; message: string }> => {
+export const deleteAllNotifications = async (): Promise<void> => {
   try {
-    const response = await axios.delete('/notifications');
-    return response.data;
+    await axios.delete('/api/notifications');
   } catch (error) {
     console.error('Error deleting all notifications:', error);
     throw error;

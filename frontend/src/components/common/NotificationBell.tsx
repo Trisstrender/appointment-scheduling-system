@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Badge, 
   IconButton, 
@@ -10,27 +10,33 @@ import {
   Box, 
   Divider,
   ListItemIcon,
-  Button
+  Button,
+  CircularProgress
 } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import EventIcon from '@mui/icons-material/Event';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../../store';
-import { markAsRead, clearAll } from '../../store/slices/notificationSlice';
 import { formatDistanceToNow } from 'date-fns';
+import { useNotifications } from '../../hooks/useNotifications';
 
 const NotificationBell: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-  const dispatch = useDispatch();
-  const { notifications } = useSelector((state: RootState) => state.notifications);
-  
-  const unreadCount = notifications.filter(notification => !notification.read).length;
+  const { 
+    notifications, 
+    unreadCount, 
+    loading, 
+    error, 
+    fetchNotifications, 
+    markNotificationAsRead, 
+    clearAllNotifications 
+  } = useNotifications();
   
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
+    // Fetch latest notifications when opening the popover
+    fetchNotifications();
   };
 
   const handleClose = () => {
@@ -38,11 +44,11 @@ const NotificationBell: React.FC = () => {
   };
 
   const handleMarkAsRead = (id: string) => {
-    dispatch(markAsRead(id));
+    markNotificationAsRead(id);
   };
 
   const handleClearAll = () => {
-    dispatch(clearAll());
+    clearAllNotifications();
     handleClose();
   };
 
@@ -102,7 +108,17 @@ const NotificationBell: React.FC = () => {
             )}
           </Box>
           <Divider />
-          {notifications.length === 0 ? (
+          {loading ? (
+            <Box sx={{ p: 4, display: 'flex', justifyContent: 'center' }}>
+              <CircularProgress size={24} />
+            </Box>
+          ) : error ? (
+            <Box sx={{ p: 2, textAlign: 'center' }}>
+              <Typography variant="body2" color="error">
+                {error}
+              </Typography>
+            </Box>
+          ) : notifications.length === 0 ? (
             <Box sx={{ p: 2, textAlign: 'center' }}>
               <Typography variant="body2" color="text.secondary">
                 No notifications
